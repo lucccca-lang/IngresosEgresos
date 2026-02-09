@@ -7,11 +7,11 @@
     <style>
         /* --- ESTILOS VISUALES --- */
         :root {
-            --primary: #2563eb;       /* Azul Empresas */
-            --expense-color: #be123c; /* Rojo Gastos */
-            --salary-color: #059669;  /* Verde Sueldos */
-            --tax-color: #7c3aed;     /* Violeta Ingresos */
-            --data-color: #475569;    /* Gris Datos */
+            --primary: #2563eb;       
+            --expense-color: #be123c; 
+            --salary-color: #059669;  
+            --tax-color: #7c3aed;     
+            --data-color: #475569;    
             --galicia: #ea580c;       
             --frances: #0f172a;       
             --bg: #f1f5f9;
@@ -65,45 +65,56 @@
         input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 16px; box-sizing: border-box; background: #fff; margin-bottom: 8px; }
         input:focus { outline: 2px solid var(--primary); border-color: transparent; }
 
-        /* INPUTS SUELDOS (TAMAÑO REDUCIDO) */
+        /* INPUTS SUELDOS */
+        .salary-cell-wrapper { display: flex; align-items: center; gap: 2px; }
         .salary-input { 
-            width: 100%; 
-            padding: 5px !important; 
-            font-size: 13px !important; 
-            font-weight: 700 !important; 
-            color: #064e3b !important;
-            background: #ecfdf5 !important;
-            border: 1px solid #a7f3d0 !important;
-            border-radius: 5px;
-            text-align: right;
-            margin: 0 !important;
+            flex: 1; width: 100% !important; padding: 5px !important; font-size: 13px !important; font-weight: 700 !important; 
+            color: #064e3b !important; background: #ecfdf5 !important; border: 1px solid #a7f3d0 !important;
+            border-radius: 5px; text-align: right; margin: 0 !important;
         }
-        .salary-input:focus {
-            background: #fff !important;
-            border-color: #059669 !important;
-        }
+        .salary-input:focus { background: #fff !important; border-color: #059669 !important; }
 
-        /* INPUTS GASTOS FIJOS (AUTO-SAVE) */
-        .fix-expense-input {
-            margin: 0 !important; 
-            text-align: right; 
-            font-weight: bold; 
-            color: #be123c; 
-            font-size: 14px;
-            transition: background 0.3s;
+        /* BOTON SUMAR SUELDO */
+        .btn-add-salary {
+            background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; border-radius: 4px;
+            width: 20px; height: 26px; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 14px;
         }
-        .expense-item-div {
-            padding: 8px; border-radius: 8px; transition: 0.3s;
+        .btn-add-salary:active { background: #6ee7b7; }
+
+        /* INPUTS ARCA */
+        .arca-input {
+            width: 100%; padding: 5px !important; font-size: 12px !important; 
+            text-align: center; background: #f3f0ff !important; 
+            border: 1px solid #d8b4fe !important; border-radius: 5px; margin: 0 !important;
+            color: #581c87; font-weight: 600;
         }
+        .arca-input:focus { background: #fff !important; border-color: #7c3aed !important; }
+
+        /* INPUTS GASTOS */
+        .fix-expense-input { margin: 0 !important; text-align: right; font-weight: bold; color: #be123c; font-size: 14px; transition: background 0.3s; }
+        .expense-item-div { padding: 8px; border-radius: 8px; transition: 0.3s; position: relative; }
+        
+        /* BOTON SUMAR GASTO */
+        .btn-add-expense {
+            background: #e2e8f0; color: #475569; border: none; border-radius: 4px;
+            width: 20px; height: 20px; font-size: 14px; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-add-expense:active { background: #cbd5e1; }
 
         /* BOTONES */
         .btn-primary { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; }
-        .btn-expense { background: var(--expense-color); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; }
         .btn-data { background: var(--data-color); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; }
         .btn-sm { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; border: none; cursor: pointer; }
         .btn-success { background: #16a34a; color: white; }
         .btn-danger { background: #fee2e2; color: #dc2626; }
+        .btn-edit { background: #fef08a; color: #854d0e; border: 1px solid #fde047; }
         
+        /* BOTONES DE GESTIÓN EMPRESA */
+        .company-actions { display: flex; gap: 10px; margin-bottom: 10px; }
+        .btn-action-outline { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #475569; font-size: 11px; font-weight: bold; cursor: pointer; }
+
         /* FILTROS DE BANCO */
         .bank-filters { display: flex; gap: 5px; margin-bottom: 10px; }
         .bank-filter-btn { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: white; font-size: 11px; font-weight: bold; cursor: pointer; }
@@ -125,10 +136,7 @@
         
         /* TAGS */
         .tag { font-size: 9px; padding: 2px 4px; border-radius: 4px; color: white; font-weight: bold; text-transform: uppercase; margin-right: 2px; display: inline-block; }
-        .bg-aud { background: #d97706; }
-        .bg-fac { background: #2563eb; }
-        .bg-gal { background: var(--galicia); }
-        .bg-fra { background: var(--frances); }
+        .bg-mau { background: #3b82f6; } .bg-yan { background: #ec4899; } .bg-qua { background: #6366f1; } .bg-gal { background: var(--galicia); } .bg-fra { background: var(--frances); }
         
         /* TOTALES */
         .total-box { padding: 15px; border-radius: 12px; text-align: center; color: white; margin-bottom: 15px; }
@@ -136,7 +144,7 @@
         .bg-red { background: var(--expense-color); }
         .total-amount { font-size: 26px; font-weight: 800; }
 
-        /* TARJETAS DE RESUMEN DE INGRESOS */
+        /* RESUMEN DE INGRESOS */
         .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-bottom: 15px; }
         .summary-card { background: white; padding: 10px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
         .summary-card h4 { margin: 0 0 10px 0; color: var(--tax-color); text-transform: uppercase; font-size: 11px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
@@ -147,7 +155,6 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: flex-end; justify-content: center; backdrop-filter: blur(2px); }
         .modal-content { background: white; width: 100%; max-width: 600px; border-radius: 20px 20px 0 0; padding: 20px; max-height: 90vh; overflow-y: auto; }
         @media(min-width: 600px) { .modal { align-items: center; } .modal-content { border-radius: 16px; width: 90%; } }
-        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -164,7 +171,6 @@
     </nav>
 
     <div id="macro-income" class="macro-section active">
-        
         <div class="tabs">
             <button id="tab1" class="tab-btn active" onclick="switchIncomeTab('companies')">Empresas</button>
             <button id="tab2" class="tab-btn" onclick="switchIncomeTab('pending')">⚠️ Deudores</button>
@@ -221,12 +227,15 @@
                 <select id="companyFilterSelect" onchange="loadCompanySpecificStats()">
                     <option value="">-- Seleccionar --</option>
                 </select>
-                
                 <div style="margin-top:10px;">
                     <select id="filterYear" onchange="loadCompanySpecificStats()" style="width:auto;">
+                        <option value="2024">2024</option>
                         <option value="2025">2025</option>
                         <option value="2026">2026</option>
                         <option value="2027">2027</option>
+                        <option value="2028">2028</option>
+                        <option value="2029">2029</option>
+                        <option value="2030">2030</option>
                     </select>
                 </div>
             </div>
@@ -240,13 +249,9 @@
                 <h3 style="margin:0; color:var(--expense-color);">Gastos</h3>
                 <input type="month" id="expenseMonth" onchange="loadExpensesView()" style="width:auto; margin:0;">
             </div>
-
             <div id="fixedExpensesGrid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px;"></div>
-            
-            <p style="text-align:center; font-size:11px; color:#64748b; margin-top:0;">* Se guarda automáticamente al cambiar el valor.</p>
-            
+            <p style="text-align:center; font-size:11px; color:#64748b; margin-top:0;">* Toca el botón <b>+</b> para sumar al monto existente.</p>
             <hr style="margin: 20px 0; border:0; border-top:1px dashed #ccc;">
-
             <div style="background:#f1f5f9; padding:10px; border-radius:8px;">
                 <h4 style="margin:0 0 10px 0; font-size:12px; color:#64748b;">Gasto Extra</h4>
                 <div style="display:flex; gap:5px;">
@@ -263,12 +268,15 @@
         <div style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
              <h3 style="margin:0; color:var(--salary-color)">Planilla Sueldos</h3>
              <select id="salaryYear" onchange="loadSalaryView()" style="width:auto; margin:0; font-weight:bold;">
+                 <option value="2024">2024</option>
                  <option value="2025">2025</option>
                  <option value="2026">2026</option>
                  <option value="2027">2027</option>
+                 <option value="2028">2028</option>
+                 <option value="2029">2029</option>
+                 <option value="2030">2030</option>
              </select>
         </div>
-
         <div class="card">
             <div class="table-wrapper">
                 <table class="tax-table">
@@ -278,7 +286,7 @@
                             <th style="min-width:60px;">Sueldo</th>
                             <th style="min-width:60px;">Present.</th>
                             <th style="color:var(--salary-color)">Tot Yani</th>
-                            <th style="min-width:60px;">Tot Mauro</th>
+                            <th style="min-width:60px; color:var(--primary);">TOT MAURO</th>
                             <th>Tot General</th>
                         </tr>
                     </thead>
@@ -286,18 +294,22 @@
                 </table>
             </div>
         </div>
-        <p style="text-align:center; font-size:11px; color:#64748b;">* Actualiza automáticamente la sección INGRESOS.</p>
+        <p style="text-align:center; font-size:11px; color:#64748b;">* Mauro se calcula sumando los cobros de Empresas.</p>
     </div>
 
     <div id="macro-tax" class="macro-section">
         <div style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
-             <h3 style="margin:0; color:var(--tax-color)">Ingresos / AFIP</h3>
+             <h3 style="margin:0; color:var(--tax-color)">Ingresos / ARCA</h3>
              <select id="taxYear" onchange="loadTaxView()" style="width:auto; margin:0; font-weight:bold;">
+                 <option value="2024">2024</option>
                  <option value="2025">2025</option>
                  <option value="2026">2026</option>
+                 <option value="2027">2027</option>
+                 <option value="2028">2028</option>
+                 <option value="2029">2029</option>
+                 <option value="2030">2030</option>
              </select>
         </div>
-
         <div class="summary-grid">
             <div class="summary-card">
                 <h4>👤 Yanina</h4>
@@ -318,25 +330,24 @@
                 <div class="summary-row total" style="color:#2563eb; font-size:15px;"><span>ANUAL:</span> <span id="sumGT">-</span></div>
             </div>
         </div>
-
         <div class="card">
             <div class="table-wrapper">
                 <table>
                     <thead>
                         <tr>
-                            <th>Mes</th>
-                            <th>Yanina</th>
-                            <th>Mauro</th>
+                            <th style="width:30px">Mes</th>
+                            <th>Fact. Yani</th>
+                            <th>Fact. Mauro</th>
                             <th>TOTAL</th>
-                            <th>AFIP Yani</th>
-                            <th>AFIP Mauro</th>
+                            <th style="width:60px;">ARCA Y</th>
+                            <th style="width:60px;">ARCA M</th>
                         </tr>
                     </thead>
                     <tbody id="taxTableBody"></tbody>
                 </table>
             </div>
         </div>
-        <p style="text-align:center; font-size:11px; color:#64748b;">* Los montos provienen de la sección SUELDOS.</p>
+        <p style="text-align:center; font-size:11px; color:#64748b;">* Los montos son la Suma de Facturación por Fecha de Emisión.</p>
     </div>
 
     <div id="macro-data" class="macro-section">
@@ -362,10 +373,14 @@
             <input type="file" id="importFile" accept=".json" style="margin-bottom:10px;">
             <button class="btn-primary" onclick="importData()">⬆️ Restaurar Copia</button>
         </div>
-        
-        <p style="text-align:center; font-size:11px; color:#ef4444; margin-top:20px;">
-            ⚠️ Importante: Al restaurar una copia, se borrarán los datos actuales de este dispositivo y se reemplazarán por los del archivo.
-        </p>
+
+        <div class="card" style="border: 1px solid #ef4444; background:#fef2f2;">
+            <h4 style="margin-top:0; color:#dc2626;">⚠️ ZONA DE PELIGRO</h4>
+            <p style="font-size:13px; color:#b91c1c;">
+                Esto borrará <b>TODA</b> la información cargada en este dispositivo (Empresas, Gastos, Sueldos). No se puede deshacer.
+            </p>
+            <button class="btn-danger" onclick="eraseAllData()">🗑️ BORRAR TODO EL SISTEMA</button>
+        </div>
     </div>
 
 </div>
@@ -374,48 +389,42 @@
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <h2 id="modalTitle" style="margin:0; color:var(--primary);">Empresa</h2>
-            <button onclick="closeModal()" style="background:none; border:none; font-size:24px;">&times;</button>
+            <button onclick="tryCloseModal()" style="background:none; border:none; font-size:24px;">&times;</button>
         </div>
-
-        <div class="card" style="background: #f8fafc; padding:15px; border:1px solid #cbd5e1; box-shadow:none;">
-            
+        <div class="company-actions">
+            <button class="btn-action-outline" onclick="renameCompany()">✏️ Renombrar</button>
+            <button class="btn-action-outline" onclick="deleteCompany()" style="color:#ef4444; border-color:#fecaca;">🗑️ Eliminar</button>
+        </div>
+        <div class="card" id="entryFormCard" style="background: #f8fafc; padding:15px; border:1px solid #cbd5e1; box-shadow:none;">
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                 <select id="entryType">
-                    <option value="factura">📄 Factura</option>
-                    <option value="auditoria">🛡️ Auditoría</option>
+                    <option value="fac_mauro">👤 Fac. Mauro</option>
+                    <option value="fac_yani">👤 Fac. Yanina</option>
+                    <option value="fac_quassar">🏢 Fac. Quassar</option>
                 </select>
                 <select id="bankSelect">
                     <option value="galicia">🍊 Galicia</option>
                     <option value="frances">🔵 Francés</option>
                 </select>
             </div>
-
             <div style="display:flex; gap:10px;">
                 <input type="text" id="invNum" placeholder="N° Factura">
                 <input type="number" id="amount" placeholder="$ Monto">
             </div>
-            
             <input type="text" id="entryDetail" placeholder="Detalle (Opcional)">
-            
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <div>
-                    <label style="font-size:10px; font-weight:bold;">EMISIÓN</label>
-                    <input type="date" id="dateBill">
-                </div>
-                <div>
-                    <label style="font-size:10px; font-weight:bold;">COBRO</label>
-                    <input type="date" id="datePay">
-                </div>
+                <div><label style="font-size:10px; font-weight:bold;">EMISIÓN</label><input type="date" id="dateBill"></div>
+                <div><label style="font-size:10px; font-weight:bold;">COBRO</label><input type="date" id="datePay"></div>
             </div>
-
             <div style="display:flex; align-items:center; gap:10px; margin-top:5px; background:#fff7ed; padding:8px; border-radius:6px; border:1px solid #ffedd5;">
                 <input type="checkbox" id="checkPending" onchange="toggleDateInput()" style="width:20px; margin:0;">
                 <label for="checkPending" style="font-size:12px; font-weight:bold; color:#c2410c;">PENDIENTE (No cobrado)</label>
             </div>
-            
-            <button class="btn-primary" onclick="saveCompanyEntry()" style="margin-top:15px;">Guardar</button>
+            <div style="display:flex; gap:5px; margin-top:15px;">
+                <button id="btnSaveEntry" class="btn-primary" onclick="saveCompanyEntry()">Guardar</button>
+                <button id="btnCancelEdit" class="btn-sm" style="display:none; background:#94a3b8; color:white; width:auto;" onclick="cancelEditMode()">Cancelar</button>
+            </div>
         </div>
-
         <h3>Historial</h3>
         <div class="table-wrapper">
             <table id="companyHistoryTable">
@@ -434,589 +443,171 @@
     
     let currentCompany = null;
     let currentBankFilter = 'all';
+    let editingEntryId = null; 
 
-    const fixedExpenseList = [
-        "AMEX", "TARJ FRANCES", "FRANCES MASTER", "TARJ GALICIA", "TARJ ICBC", 
-        "TARJ HIPOTECARIO", "TARJ BANCO NACION", "SERV-LUZ", "GAS", "EXPENSAS", 
-        "NAFTA", "SUPERMERCADO", "MUNICIPAL", "ARBA CASA Y PATENTE", 
-        "IIGG YANINA", "IIGG MAURO", "MONOTRIBUTO", "COLEGIO LUCCA", 
-        "COLEGIO EMMA", "HONORARIOS", "TELEFONOS", "EXTRAS"
-    ];
+    const fixedExpenseList = ["AMEX", "TARJ FRANCES", "FRANCES MASTER", "TARJ GALICIA", "TARJ ICBC", "TARJ HIPOTECARIO", "TARJ BANCO NACION", "SERV-LUZ", "GAS", "EXPENSAS", "NAFTA", "SUPERMERCADO", "MUNICIPAL", "ARBA CASA Y PATENTE", "IIGG YANINA", "IIGG MAURO", "MONOTRIBUTO", "COLEGIO LUCCA", "COLEGIO EMMA", "HONORARIOS", "TELEFONOS", "EXTRAS"];
 
     // --- UTILS ---
-    const formatMoney = (val) => '$' + val.toLocaleString('es-AR');
+    const formatMoney = (val) => '$' + (val || 0).toLocaleString('es-AR');
     const formatDate = (s) => { if(!s) return '-'; const [y,m,d]=s.split('-'); return `${d}/${m}`; };
+    const getBankTag = (bank) => bank === 'galicia' ? '<span class="tag bg-gal">GAL</span>' : '<span class="tag bg-fra">FRA</span>';
+    const getTypeTag = (type) => {
+        if(type === 'fac_yani') return '<span class="tag bg-yan">YAN</span>';
+        if(type === 'fac_quassar') return '<span class="tag bg-qua">QUA</span>';
+        return '<span class="tag bg-mau">MAU</span>';
+    };
+
     function saveAll() {
         localStorage.setItem('sys_companies_v5', JSON.stringify(companies));
         localStorage.setItem('sys_expenses_v5', JSON.stringify(expenses));
         localStorage.setItem('sys_salaries_v2', JSON.stringify(salaries));
     }
 
+    // --- CALCULO AUTOMATICO PARA MAURO (Cobrado - Cashflow) ---
+    function getMauroCobrosForMonth(monthKey) {
+        let total = 0;
+        Object.values(companies).forEach(entries => {
+            entries.forEach(e => {
+                if (e.datePay && e.datePay.startsWith(monthKey)) {
+                    total += (e.amountCollected !== undefined ? e.amountCollected : e.amount);
+                }
+            });
+        });
+        return total;
+    }
+
+    // --- NUEVO: CALCULO FACTURACION (ARCA/Tax) ---
+    function getBilledTotal(monthKey, allowedTypes) {
+        let total = 0;
+        Object.values(companies).forEach(entries => {
+            entries.forEach(e => {
+                if (e.dateBill && e.dateBill.startsWith(monthKey) && allowedTypes.includes(e.type)) {
+                    total += e.amount;
+                }
+            });
+        });
+        return total;
+    }
+
     function showMacroSection(sec) {
         document.querySelectorAll('.macro-section').forEach(el => el.classList.remove('active'));
         document.getElementById('macro-' + sec).classList.add('active');
-        
         document.querySelectorAll('.main-nav button').forEach(b => b.className = '');
         document.getElementById('nav-' + sec).classList.add('active-' + sec);
-
         if(sec === 'expense') loadExpensesView();
         if(sec === 'income') refreshIncomeViews();
         if(sec === 'salary') loadSalaryView();
         if(sec === 'tax') loadTaxView();
     }
 
-    // ==========================================
-    // SECCIÓN 1: EMPRESAS
-    // ==========================================
-
     function addCompany() {
         const name = document.getElementById('newCompanyName').value.trim();
         if(!name) return;
         if(companies[name]) return alert('Ya existe');
-        companies[name] = [];
-        document.getElementById('newCompanyName').value = '';
-        saveAll();
-        renderCompanies();
-        populateCompanyFilter();
+        companies[name] = []; document.getElementById('newCompanyName').value = '';
+        saveAll(); renderCompanies(); populateCompanyFilter();
     }
 
     function renderCompanies() {
-        const container = document.getElementById('companiesList');
-        container.innerHTML = '';
+        const container = document.getElementById('companiesList'); container.innerHTML = '';
         Object.keys(companies).sort().forEach(name => {
-            const btn = document.createElement('div');
-            btn.className = 'company-btn';
+            const btn = document.createElement('div'); btn.className = 'company-btn';
             const pend = companies[name].filter(e => e.datePay === "").length;
             const badge = pend > 0 ? `<div style="background:#fee2e2; color:#ef4444; font-size:10px; padding:2px 6px; border-radius:10px; margin-top:5px;">⚠️ ${pend} Pend</div>` : '';
             btn.innerHTML = `<span style="font-size:14px;">${name}</span> ${badge}`;
-            btn.onclick = () => openCompanyModal(name);
-            container.appendChild(btn);
+            btn.onclick = () => openCompanyModal(name); container.appendChild(btn);
         });
         populateCompanyFilter();
     }
 
-    // Modal
-    function openCompanyModal(name) {
-        currentCompany = name;
-        document.getElementById('modalTitle').textContent = name;
-        document.getElementById('companyModal').style.display = 'flex';
-        
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('dateBill').value = today;
-        document.getElementById('datePay').value = today;
-        document.getElementById('checkPending').checked = false;
-        document.getElementById('entryDetail').value = '';
-        toggleDateInput();
-        renderCompanyHistory();
+    function openCompanyModal(name) { currentCompany = name; document.getElementById('modalTitle').textContent = name; document.getElementById('companyModal').style.display = 'flex'; cancelEditMode(); renderCompanyHistory(); }
+    
+    // --- LOGICA CIERRE MODAL SEGURO ---
+    function hasUnsavedData() {
+        const num = document.getElementById('invNum').value.trim();
+        const amt = document.getElementById('amount').value.trim();
+        const det = document.getElementById('entryDetail').value.trim();
+        return (num || amt || det);
     }
-    function closeModal() { document.getElementById('companyModal').style.display = 'none'; currentCompany = null; }
+
+    function tryCloseModal() {
+        if (hasUnsavedData()) {
+            if (confirm("⚠️ ¿Cerrar sin guardar? Se perderán los datos escritos.")) {
+                closeModal();
+            }
+        } else {
+            closeModal();
+        }
+    }
+
+    function closeModal() { 
+        document.getElementById('companyModal').style.display = 'none'; 
+        currentCompany = null; 
+        cancelEditMode(); 
+    }
+
+    function renameCompany() { const newName = prompt("Nuevo nombre:", currentCompany); if(!newName || newName === currentCompany) return; if(companies[newName]) return alert("Ya existe"); companies[newName] = companies[currentCompany]; delete companies[currentCompany]; currentCompany = newName; document.getElementById('modalTitle').textContent = newName; saveAll(); renderCompanies(); populateCompanyFilter(); }
+    function deleteCompany() { if(!confirm("¿Borrar empresa?")) return; delete companies[currentCompany]; saveAll(); renderCompanies(); populateCompanyFilter(); closeModal(); }
+
     function toggleDateInput() {
-        const chk = document.getElementById('checkPending');
-        const inp = document.getElementById('datePay');
-        inp.disabled = chk.checked;
-        inp.style.background = chk.checked ? '#e2e8f0' : '#fff';
-        if(chk.checked) inp.value = ''; else inp.value = new Date().toISOString().split('T')[0];
+        const chk = document.getElementById('checkPending'), inp = document.getElementById('datePay');
+        inp.disabled = chk.checked; inp.style.background = chk.checked ? '#e2e8f0' : '#fff';
+        if(chk.checked) inp.value = ''; else if(!editingEntryId) inp.value = new Date().toISOString().split('T')[0];
     }
 
     function saveCompanyEntry() {
-        const type = document.getElementById('entryType').value;
-        const bank = document.getElementById('bankSelect').value;
-        const num = document.getElementById('invNum').value;
-        const amount = parseFloat(document.getElementById('amount').value);
-        const dateBill = document.getElementById('dateBill').value;
-        const detail = document.getElementById('entryDetail').value;
-        let datePay = document.getElementById('checkPending').checked ? "" : document.getElementById('datePay').value;
-
-        if(!num || isNaN(amount) || !dateBill) return alert('Faltan datos obligatorios');
+        const type = document.getElementById('entryType').value, bank = document.getElementById('bankSelect').value, num = document.getElementById('invNum').value, amount = parseFloat(document.getElementById('amount').value), dBill = document.getElementById('dateBill').value, dPay = document.getElementById('checkPending').checked ? "" : document.getElementById('datePay').value, det = document.getElementById('entryDetail').value;
+        if(!num || isNaN(amount) || !dBill) return alert('Faltan datos');
         
-        // VALIDACIÓN DE FECHA
-        if(datePay && dateBill > datePay) {
-            return alert('Error: La fecha de Emisión no puede ser posterior a la fecha de Cobro.');
-        }
+        let coll = undefined;
+        if(editingEntryId) { const old = companies[currentCompany].find(e => e.id === editingEntryId); if(old) coll = old.amountCollected; }
+        if(!dPay && !editingEntryId) coll = undefined;
 
-        companies[currentCompany].push({ id: Date.now(), type, bank, num, amount, dateBill, datePay, detail });
-        
-        document.getElementById('invNum').value = '';
-        document.getElementById('amount').value = '';
-        document.getElementById('entryDetail').value = '';
-        saveAll();
-        renderCompanyHistory();
+        const entry = { id: editingEntryId || Date.now(), type, bank, num, amount, dateBill: dBill, datePay: dPay, detail: det, amountCollected: coll };
+        if (editingEntryId) { const idx = companies[currentCompany].findIndex(e => e.id === editingEntryId); if(idx !== -1) companies[currentCompany][idx] = entry; } 
+        else { companies[currentCompany].push(entry); }
+        saveAll(); cancelEditMode(); renderCompanyHistory();
+    }
+
+    function editEntry(id) {
+        const entry = companies[currentCompany].find(e => e.id === id); if(!entry) return;
+        editingEntryId = id; 
+        let safeType = entry.type; if(safeType === 'factura' || safeType === 'auditoria') safeType = 'fac_mauro';
+        document.getElementById('entryType').value = safeType; document.getElementById('bankSelect').value = entry.bank; document.getElementById('invNum').value = entry.num; document.getElementById('amount').value = entry.amount; document.getElementById('dateBill').value = entry.dateBill; document.getElementById('entryDetail').value = entry.detail || '';
+        if(entry.datePay === "") { document.getElementById('checkPending').checked = true; document.getElementById('datePay').value = ''; } 
+        else { document.getElementById('checkPending').checked = false; document.getElementById('datePay').value = entry.datePay; }
+        toggleDateInput();
+        document.getElementById('btnSaveEntry').textContent = "Actualizar"; document.getElementById('btnSaveEntry').style.background = "#ca8a04"; document.getElementById('entryFormCard').style.background = "#fefce8"; document.getElementById('btnCancelEdit').style.display = 'block';
+    }
+
+    function cancelEditMode() {
+        editingEntryId = null; document.getElementById('invNum').value = ''; document.getElementById('amount').value = ''; document.getElementById('entryDetail').value = ''; document.getElementById('dateBill').value = new Date().toISOString().split('T')[0]; document.getElementById('datePay').value = new Date().toISOString().split('T')[0]; document.getElementById('checkPending').checked = false; toggleDateInput();
+        document.getElementById('btnSaveEntry').textContent = "Guardar"; document.getElementById('btnSaveEntry').style.background = "var(--primary)"; document.getElementById('entryFormCard').style.background = "#f8fafc"; document.getElementById('btnCancelEdit').style.display = 'none';
     }
 
     function renderCompanyHistory() {
-        const tbody = document.querySelector('#companyHistoryTable tbody');
-        tbody.innerHTML = '';
-        const list = companies[currentCompany].sort((a,b) => new Date(b.dateBill) - new Date(a.dateBill));
-        
-        list.forEach(e => {
+        const tbody = document.querySelector('#companyHistoryTable tbody'); tbody.innerHTML = '';
+        companies[currentCompany].sort((a,b) => new Date(b.dateBill) - new Date(a.dateBill)).forEach(e => {
             const isPend = e.datePay === "";
-            // TAGS
-            const typeTag = e.type === 'auditoria' ? '<span class="tag bg-aud">AUD</span>' : '<span class="tag bg-fac">FAC</span>';
-            const bankTag = e.bank === 'galicia' ? '<span class="tag bg-gal">GAL</span>' : '<span class="tag bg-fra">FRA</span>';
-            const det = e.detail ? `<span style="font-size:11px; font-style:italic; color:#666; display:block;">${e.detail}</span>` : '';
-
-            const btnAction = isPend 
-                ? `<button class="btn-sm btn-success" onclick="markPaid('${currentCompany}',${e.id})">$</button>` 
-                : '';
-
-            tbody.innerHTML += `
-                <tr>
-                    <td>${typeTag} ${bankTag} <b>${e.num}</b> ${det}</td>
-                    <td>E:${formatDate(e.dateBill)}<br>C:${formatDate(e.datePay)}</td>
-                    <td><b>${formatMoney(e.amount)}</b></td>
-                    <td align="right" style="white-space:nowrap;">
-                        ${btnAction}
-                        <button class="btn-sm btn-danger" onclick="delEntry('${currentCompany}',${e.id})">×</button>
-                    </td>
-                </tr>
-            `;
+            let amDisp = `<b>${formatMoney(e.amount)}</b>`;
+            if(e.amountCollected && e.amountCollected !== e.amount) amDisp += `<br><span style="font-size:10px; color:green;">Cob: ${formatMoney(e.amountCollected)}</span>`;
+            const btnPay = isPend ? `<button class="btn-sm btn-success" onclick="markPaid('${currentCompany}',${e.id})">$</button>` : '';
+            tbody.innerHTML += `<tr><td>${getTypeTag(e.type)} ${getBankTag(e.bank)} <b>${e.num}</b> ${e.detail ? `<span style="font-size:11px; font-style:italic; color:#666; display:block;">${e.detail}</span>` : ''}</td><td>E:${formatDate(e.dateBill)}<br>C:${formatDate(e.datePay)}</td><td>${amDisp}</td><td align="right" style="white-space:nowrap;">${btnPay}<button class="btn-sm btn-edit" onclick="editEntry(${e.id})">✏️</button><button class="btn-sm btn-danger" onclick="delEntry('${currentCompany}',${e.id})">×</button></td></tr>`;
         });
     }
 
-    // --- VISTAS INGRESOS ---
-    function loadPendingView() {
-        const div = document.getElementById('pendingList');
-        div.innerHTML = '';
-        let total = 0;
-        
-        Object.keys(companies).forEach(name => {
-            const list = companies[name].filter(e => e.datePay === "");
-            if(list.length > 0) {
-                const sub = list.reduce((s,e)=>s+e.amount,0);
-                total += sub;
-                let rows = list.map(e => {
-                    const tTag = e.type==='auditoria'?'<span class="tag bg-aud">AUD</span>':'<span class="tag bg-fac">FAC</span>';
-                    const bTag = e.bank==='galicia'?'<span class="tag bg-gal">GAL</span>':'<span class="tag bg-fra">FRA</span>';
-                    return `
-                    <tr>
-                        <td>${tTag} ${bTag} <b>${e.num}</b></td>
-                        <td>${formatDate(e.dateBill)}</td>
-                        <td>${formatMoney(e.amount)}</td>
-                        <td align="right"><button class="btn-sm btn-success" onclick="markPaid('${name}',${e.id})">Cobrar</button></td>
-                    </tr>`;
-                }).join('');
-                div.innerHTML += `<div class="card"><h4>${name} <span style="float:right; color:#dc2626">${formatMoney(sub)}</span></h4><table>${rows}</table></div>`;
-            }
-        });
-        document.getElementById('globalPendingTotal').innerText = formatMoney(total);
-        if(total === 0) div.innerHTML = '<p style="text-align:center; color:#999">Todo al día.</p>';
-    }
-
-    function loadBillingView() {
-        const month = document.getElementById('billingMonthSelector').value;
-        const divResults = document.getElementById('billingResults');
-        const divStatus = document.getElementById('billingStatusContainer');
-        divResults.innerHTML = ''; divStatus.innerHTML = '';
-        if(!month) return;
-
-        let totalBilled = 0;
-        let totalPendingInMonth = 0;
-
-        Object.keys(companies).forEach(name => {
-            const list = companies[name].filter(e => e.dateBill.startsWith(month));
-            if(list.length > 0) {
-                let sub = list.reduce((s,e)=>s+e.amount,0);
-                totalBilled += sub;
-                
-                let rows = list.map(e => {
-                    const isPaid = e.datePay !== "";
-                    if(!isPaid) totalPendingInMonth += e.amount;
-                    const status = isPaid ? '<span style="color:green">✔</span>' : '<span style="color:red">⏳</span>';
-                    const tTag = e.type==='auditoria'?'<span class="tag bg-aud">AUD</span>':'<span class="tag bg-fac">FAC</span>';
-                    const bTag = e.bank==='galicia'?'<span class="tag bg-gal">GAL</span>':'<span class="tag bg-fra">FRA</span>';
-                    return `<tr><td>${tTag} ${bTag} <b>${e.num}</b></td><td>${status}</td><td align="right"><b>${formatMoney(e.amount)}</b></td></tr>`;
-                }).join('');
-                divResults.innerHTML += `<div class="card"><h4>${name}</h4><table>${rows}</table></div>`;
-            }
-        });
-
-        if(totalBilled > 0) {
-            divStatus.innerHTML = (totalPendingInMonth === 0) 
-                ? `<div style="background:#dcfce7; color:#166534; padding:15px; border-radius:12px; text-align:center; font-weight:bold; margin-bottom:15px; border:2px solid #bbf7d0;">✨ ¡FELICITACIONES! ✨<br>Todo cobrado.</div>`
-                : `<div style="background:#fee2e2; color:#dc2626; padding:15px; border-radius:12px; text-align:center; font-weight:bold; margin-bottom:15px; border:2px solid #fecaca;">⚠️ FALTA COBRAR: ${formatMoney(totalPendingInMonth)}</div>`;
-            divResults.insertAdjacentHTML('afterbegin', `<div class="total-box bg-blue"><div style="font-size:12px;">TOTAL FACTURADO</div><div class="total-amount">${formatMoney(totalBilled)}</div></div>`);
-        } else {
-            divResults.innerHTML = '<p style="text-align:center; padding:20px;">Sin facturación.</p>';
-        }
-    }
-
-    function loadCollectedView() {
-        const month = document.getElementById('collectedMonthSelector').value;
-        const div = document.getElementById('collectedResults');
-        div.innerHTML = '';
-        if(!month) return;
-
-        let total = 0;
-        Object.keys(companies).forEach(name => {
-            const list = companies[name].filter(e => {
-                return (e.datePay && e.datePay.startsWith(month)) && (currentBankFilter === 'all' || e.bank === currentBankFilter);
-            });
-
-            if(list.length > 0) {
-                let sub = list.reduce((s,e)=>s+e.amount,0);
-                total += sub;
-                let rows = list.map(e => {
-                     const bTag = e.bank==='galicia'?'<span class="tag bg-gal">GAL</span>':'<span class="tag bg-fra">FRA</span>';
-                     const tTag = e.type==='auditoria'?'<span class="tag bg-aud">AUD</span>':'<span class="tag bg-fac">FAC</span>';
-                     return `<tr><td>${tTag} ${bTag} <b>${e.num}</b></td><td>${formatDate(e.datePay)}</td><td align="right"><b>${formatMoney(e.amount)}</b></td></tr>`;
-                }).join('');
-                div.innerHTML += `<div class="card"><h4>${name}</h4><table>${rows}</table></div>`;
-            }
-        });
-
-        if(total > 0) div.insertAdjacentHTML('afterbegin', `<div class="total-box" style="background:#16a34a"><div style="font-size:12px;">TOTAL COBRADO</div><div class="total-amount">${formatMoney(total)}</div></div>`);
-        else div.innerHTML = '<p style="text-align:center; padding:20px;">Sin cobros.</p>';
-    }
-
-    function filterBank(filter, btn) {
-        currentBankFilter = filter;
-        document.querySelectorAll('.bank-filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        loadCollectedView();
-    }
-
-    // --- 1.5 FICHA EMPRESA (FILTRO) ---
-    function populateCompanyFilter() {
-        const sel = document.getElementById('companyFilterSelect');
-        sel.innerHTML = '<option value="">-- Elige una empresa --</option>';
-        Object.keys(companies).sort().forEach(c => {
-            sel.innerHTML += `<option value="${c}">${c}</option>`;
-        });
-    }
-
-    function loadCompanySpecificStats() {
-        const comp = document.getElementById('companyFilterSelect').value;
-        const year = document.getElementById('filterYear').value;
-        const div = document.getElementById('companyFilterResults');
-        div.innerHTML = '';
-        
-        if(!comp) return;
-
-        // Estructura de meses
-        let html = '<div class="card"><table style="font-size:12px;"><thead><tr><th>Mes</th><th>Cob. FAC</th><th>Cob. AUD</th><th>TOTAL</th></tr></thead><tbody>';
-        let totalFac = 0;
-        let totalAud = 0;
-        let totalAll = 0;
-
-        for(let i=1; i<=12; i++) {
-            const mStr = i.toString().padStart(2, '0');
-            const key = `${year}-${mStr}`;
-            
-            // Filter items paid in this month/year
-            const paidItems = companies[comp].filter(e => e.datePay && e.datePay.startsWith(key));
-
-            // Sum Facturas
-            const cobFactura = paidItems.filter(e => e.type === 'factura').reduce((s,e)=>s+e.amount, 0);
-
-            // Sum Auditorias
-            const cobAuditoria = paidItems.filter(e => e.type === 'auditoria').reduce((s,e)=>s+e.amount, 0);
-
-            const totalMonth = cobFactura + cobAuditoria;
-
-            totalFac += cobFactura;
-            totalAud += cobAuditoria;
-            totalAll += totalMonth;
-            
-            if(totalMonth > 0) {
-                html += `<tr>
-                    <td><b>${mStr}</b></td>
-                    <td style="color:${cobFactura>0?'#2563eb':'#ccc'}">${formatMoney(cobFactura)}</td>
-                    <td style="color:${cobAuditoria>0?'#d97706':'#ccc'}">${formatMoney(cobAuditoria)}</td>
-                    <td style="font-weight:bold;">${formatMoney(totalMonth)}</td>
-                </tr>`;
-            }
-        }
-        
-        html += `<tr style="background:#f1f5f9; border-top:2px solid #cbd5e1;">
-                    <td><b>ANUAL</b></td>
-                    <td style="color:#2563eb"><b>${formatMoney(totalFac)}</b></td>
-                    <td style="color:#d97706"><b>${formatMoney(totalAud)}</b></td>
-                    <td><b>${formatMoney(totalAll)}</b></td>
-                 </tr></tbody></table></div>`;
-        
-        div.innerHTML = html;
-    }
-
-
-    // ==========================================
-    // SECCIÓN 2: GASTOS
-    // ==========================================
-
-    function loadExpensesView() {
-        const month = document.getElementById('expenseMonth').value;
-        const grid = document.getElementById('fixedExpensesGrid');
-        const divRes = document.getElementById('expensesResults');
-        
-        if(!expenses[month]) expenses[month] = [];
-        
-        grid.innerHTML = '';
-        fixedExpenseList.forEach(name => {
-            const existing = expenses[month].find(e => e.name === name);
-            const val = existing ? existing.amount : '';
-            const bg = (!val || val == 0) ? '#fef2f2; border:1px solid #fecaca;' : '#f8fafc; border:1px solid #e2e8f0;';
-            
-            // Usamos onchange para auto-guardar
-            grid.innerHTML += `
-                <div class="expense-item-div" style="background:${bg}">
-                    <label style="display:block; font-size:10px; font-weight:700; color:#475569; margin-bottom:3px; height:15px; overflow:hidden;">${name}</label>
-                    <input type="number" class="fix-expense-input" id="fix_${name.replace(/\s/g,'')}" placeholder="0" value="${val}" onchange="autoSaveFixed('${name}')">
-                </div>
-            `;
-        });
-        
-        updateExpenseTotalDisplay();
-    }
-
-    function autoSaveFixed(name) {
-        const month = document.getElementById('expenseMonth').value;
-        const inputId = "fix_" + name.replace(/\s/g,'');
-        const inputEl = document.getElementById(inputId);
-        const val = parseFloat(inputEl.value);
-
-        if(!expenses[month]) expenses[month] = [];
-
-        // Encontrar indice
-        const index = expenses[month].findIndex(e => e.name === name);
-
-        if(!isNaN(val) && val > 0) {
-            if(index >= 0) expenses[month][index].amount = val;
-            else expenses[month].push({ id: Date.now(), name: name, amount: val });
-            
-            // Actualizar estilo visual del padre
-            inputEl.parentElement.style.background = '#f8fafc';
-            inputEl.parentElement.style.borderColor = '#e2e8f0';
-
-        } else if (index >= 0) {
-            // Borrar si vacio
-            expenses[month].splice(index, 1);
-            
-            // Actualizar estilo visual del padre
-            inputEl.parentElement.style.background = '#fef2f2';
-            inputEl.parentElement.style.borderColor = '#fecaca';
-        }
-        
-        saveAll();
-        updateExpenseTotalDisplay();
-    }
-
-    function updateExpenseTotalDisplay() {
-        const month = document.getElementById('expenseMonth').value;
-        const divRes = document.getElementById('expensesResults');
-        const list = expenses[month] || [];
-        const total = list.reduce((s,e) => s+e.amount, 0);
-
-        // Solo mostramos el total abajo y la lista si hay extras
-        let extraList = list.filter(e => !fixedExpenseList.includes(e.name));
-        
-        let extraHtml = '';
-        if(extraList.length > 0) {
-            let rows = extraList.sort((a,b)=>b.amount - a.amount).map(e => `
-                <tr>
-                    <td>${e.name}</td>
-                    <td align="right"><b>${formatMoney(e.amount)}</b></td>
-                    <td style="width:20px;"><button class="btn-sm btn-danger" onclick="delExpense('${month}',${e.id})">×</button></td>
-                </tr>
-            `).join('');
-            extraHtml = `<div class="card" style="margin-top:10px;"><h5>Extras Cargados</h5><table>${rows}</table></div>`;
-        }
-
-        divRes.innerHTML = `
-            <div class="total-box bg-red" style="margin-top:20px;">
-                <div style="font-size:12px;">TOTAL GASTOS</div>
-                <div class="total-amount">${formatMoney(total)}</div>
-            </div>
-            ${extraHtml}
-        `;
-    }
-
-    function addExtraExpense() {
-        const month = document.getElementById('expenseMonth').value;
-        const name = document.getElementById('extraName').value.trim();
-        const amount = parseFloat(document.getElementById('extraAmount').value);
-        if(!name || isNaN(amount)) return alert('Error en datos');
-        if(!expenses[month]) expenses[month] = [];
-        expenses[month].push({ id: Date.now(), name: name, amount: amount });
-        document.getElementById('extraName').value = '';
-        document.getElementById('extraAmount').value = '';
-        saveAll();
-        loadExpensesView();
-    }
-    
-    function delExpense(m, id) { 
-        if(confirm('¿Borrar?')) { 
-            expenses[m] = expenses[m].filter(e => e.id !== id); 
-            saveAll(); 
-            loadExpensesView(); 
-        } 
-    }
-
-    // ==========================================
-    // SECCIÓN 3: SUELDOS
-    // ==========================================
-    
-    function loadSalaryView() {
-        const year = document.getElementById('salaryYear').value;
-        const tbody = document.getElementById('salaryTableBody');
-        tbody.innerHTML = '';
-
-        for(let i=1; i<=12; i++) {
-            const mStr = i.toString().padStart(2, '0');
-            const monthKey = `${year}-${mStr}`;
-            
-            const data = salaries[monthKey] || { sueldo:0, pres:0, mauro:0, afip_yani:"", afip_mauro:"" };
-            
-            const totalYani = (data.sueldo || 0) + (data.pres || 0);
-            const totalGen = totalYani + (data.mauro || 0);
-
-            const row = `
-                <tr>
-                    <td style="font-weight:bold;">${mStr}</td>
-                    <td><input type="number" class="salary-input" value="${data.sueldo||''}" onchange="saveSalary('${monthKey}', 'sueldo', this.value)" placeholder="$"></td>
-                    <td><input type="number" class="salary-input" value="${data.pres||''}" onchange="saveSalary('${monthKey}', 'pres', this.value)" placeholder="$"></td>
-                    <td style="font-weight:bold; color:var(--salary-color); font-size:13px;">${formatMoney(totalYani)}</td>
-                    <td><input type="number" class="salary-input" value="${data.mauro||''}" onchange="saveSalary('${monthKey}', 'mauro', this.value)" placeholder="$"></td>
-                    <td style="font-weight:bold; font-size:13px;">${formatMoney(totalGen)}</td>
-                </tr>
-            `;
-            tbody.innerHTML += row;
-        }
-    }
-
-    function saveSalary(monthKey, field, val) {
-        if(!salaries[monthKey]) salaries[monthKey] = { sueldo:0, pres:0, mauro:0, afip_yani:"", afip_mauro:"" };
-        salaries[monthKey][field] = parseFloat(val) || 0;
-        saveAll();
-        loadSalaryView(); 
-    }
-
-    // ==========================================
-    // SECCIÓN 4: INGRESOS / IMPUESTOS
-    // ==========================================
-
-    function loadTaxView() {
-        const year = document.getElementById('taxYear').value;
-        const tbody = document.getElementById('taxTableBody');
-        tbody.innerHTML = '';
-        
-        // Accumulators for Summary
-        let sumY1=0, sumY2=0, sumM1=0, sumM2=0;
-
-        for(let i=1; i<=12; i++) {
-            const mStr = i.toString().padStart(2, '0');
-            const monthKey = `${year}-${mStr}`;
-            
-            // DATA FROM SUELDOS
-            const data = salaries[monthKey] || { sueldo:0, pres:0, mauro:0, afip_yani:"", afip_mauro:"" };
-            
-            const totalYani = (data.sueldo || 0) + (data.pres || 0);
-            const totalMauro = (data.mauro || 0);
-            const totalGen = totalYani + totalMauro;
-            
-            // Summary Calc
-            if(i <= 6) { sumY1 += totalYani; sumM1 += totalMauro; }
-            else { sumY2 += totalYani; sumM2 += totalMauro; }
-
-            const row = `
-                <tr>
-                    <td style="font-weight:bold;">${mStr}</td>
-                    <td>${formatMoney(totalYani)}</td>
-                    <td>${formatMoney(totalMauro)}</td>
-                    <td style="font-weight:bold; color:#2563eb;">${formatMoney(totalGen)}</td>
-                    <td><input type="text" value="${data.afip_yani || ''}" onchange="saveAfip('${monthKey}', 'afip_yani', this.value)" placeholder="AFIP Y" style="width:60px; margin:0; font-size:11px;"></td>
-                    <td><input type="text" value="${data.afip_mauro || ''}" onchange="saveAfip('${monthKey}', 'afip_mauro', this.value)" placeholder="AFIP M" style="width:60px; margin:0; font-size:11px;"></td>
-                </tr>
-            `;
-            tbody.innerHTML += row;
-        }
-
-        // Totales Generales
-        const sumG1 = sumY1 + sumM1;
-        const sumG2 = sumY2 + sumM2;
-        const sumGT = sumG1 + sumG2;
-
-        // Update Summary Cards
-        document.getElementById('sumY1').innerText = formatMoney(sumY1);
-        document.getElementById('sumY2').innerText = formatMoney(sumY2);
-        document.getElementById('sumYT').innerText = formatMoney(sumY1 + sumY2);
-        
-        document.getElementById('sumM1').innerText = formatMoney(sumM1);
-        document.getElementById('sumM2').innerText = formatMoney(sumM2);
-        document.getElementById('sumMT').innerText = formatMoney(sumM1 + sumM2);
-
-        document.getElementById('sumG1').innerText = formatMoney(sumG1);
-        document.getElementById('sumG2').innerText = formatMoney(sumG2);
-        document.getElementById('sumGT').innerText = formatMoney(sumGT);
-    }
-
-    function saveAfip(monthKey, field, val) {
-        if(!salaries[monthKey]) salaries[monthKey] = { sueldo:0, pres:0, mauro:0, afip_yani:"", afip_mauro:"" };
-        salaries[monthKey][field] = val;
-        saveAll();
-    }
-
-    // ==========================================
-    // SECCIÓN 5: DATOS (EXPORT / IMPORT)
-    // ==========================================
-
-    function exportData() {
-        const data = {
-            companies: companies,
-            expenses: expenses,
-            salaries: salaries
-        };
-        const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `datos_sistema_${new Date().toISOString().slice(0,10)}.json`;
-        a.click();
-    }
-
-    function importData() {
-        const file = document.getElementById('importFile').files[0];
-        if(!file) return alert('Selecciona un archivo primero');
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const data = JSON.parse(e.target.result);
-                if(data.companies && data.expenses) {
-                    companies = data.companies;
-                    expenses = data.expenses;
-                    salaries = data.salaries || {}; // Compatibilidad
-                    saveAll();
-                    alert('¡Datos restaurados con éxito!');
-                    location.reload();
-                } else {
-                    alert('El archivo no parece ser válido');
-                }
-            } catch(err) {
-                alert('Error al leer el archivo');
-            }
-        };
-        reader.readAsText(file);
-    }
-
-    // --- UTILS COMUNES ---
     function markPaid(comp, id) {
-        const date = prompt("Fecha Cobro (AAAA-MM-DD):", new Date().toISOString().split('T')[0]);
-        if(!date) return;
-        const entry = companies[comp].find(e => e.id === id);
-        if(entry) { entry.datePay = date; saveAll(); refreshIncomeViews(); }
+        const e = companies[comp].find(x => x.id === id); if(!e) return;
+        const date = prompt("Fecha Cobro:", new Date().toISOString().split('T')[0]); if(!date) return;
+        const raw = prompt("Monto Real:", e.amount); if(raw === null) return;
+        e.datePay = date; e.amountCollected = parseFloat(raw); saveAll(); refreshIncomeViews();
     }
-    function delEntry(comp, id) {
-        if(!confirm('¿Borrar?')) return;
-        companies[comp] = companies[comp].filter(e => e.id !== id);
-        saveAll();
-        refreshIncomeViews();
-    }
+
+    function delEntry(comp, id) { if(!confirm('¿Borrar?')) return; companies[comp] = companies[comp].filter(e => e.id !== id); saveAll(); refreshIncomeViews(); }
     function switchIncomeTab(tab) {
-        document.querySelectorAll('#macro-income .view-section').forEach(e => e.style.display = 'none');
-        document.querySelectorAll('#macro-income .tab-btn').forEach(e => e.classList.remove('active'));
+        document.querySelectorAll('#macro-income .view-section').forEach(e => e.style.display = 'none'); document.querySelectorAll('#macro-income .tab-btn').forEach(e => e.classList.remove('active'));
         document.getElementById('view-'+tab).style.display = 'block';
-        const map = {companies:'tab1', pending:'tab2', billing:'tab3', collected:'tab4', filter:'tab5'};
-        document.getElementById(map[tab]).classList.add('active');
-        refreshIncomeViews();
+        const map = {companies:'tab1', pending:'tab2', billing:'tab3', collected:'tab4', filter:'tab5'}; document.getElementById(map[tab]).classList.add('active'); refreshIncomeViews();
     }
     function refreshIncomeViews() {
         if(document.getElementById('view-pending').style.display === 'block') loadPendingView();
@@ -1025,20 +616,201 @@
         if(document.getElementById('view-companies').style.display === 'block') renderCompanies();
         if(document.getElementById('view-filter').style.display === 'block') populateCompanyFilter();
     }
+    function loadPendingView() {
+        const div = document.getElementById('pendingList'); div.innerHTML = ''; let total = 0;
+        Object.keys(companies).forEach(name => {
+            const list = companies[name].filter(e => e.datePay === "");
+            if(list.length > 0) {
+                const sub = list.reduce((s,e)=>s+e.amount,0); total += sub;
+                div.innerHTML += `<div class="card"><h4>${name} <span style="float:right; color:#dc2626">${formatMoney(sub)}</span></h4><table>${list.map(e=>`<tr><td>${getTypeTag(e.type)} ${getBankTag(e.bank)} <b>${e.num}</b></td><td>${formatDate(e.dateBill)}</td><td>${formatMoney(e.amount)}</td><td align="right"><button class="btn-sm btn-success" onclick="markPaid('${name}',${e.id})">Cobrar</button></td></tr>`).join('')}</table></div>`;
+            }
+        });
+        document.getElementById('globalPendingTotal').innerText = formatMoney(total);
+    }
+    function loadBillingView() {
+        const m = document.getElementById('billingMonthSelector').value; const div = document.getElementById('billingResults'); const st = document.getElementById('billingStatusContainer'); div.innerHTML = ''; st.innerHTML = ''; if(!m) return;
+        let tot = 0, pend = 0;
+        Object.keys(companies).forEach(n => {
+            const list = companies[n].filter(e => e.dateBill.startsWith(m));
+            if(list.length > 0) {
+                let sub = list.reduce((s,e)=>s+e.amount,0); tot += sub;
+                div.innerHTML += `<div class="card"><h4>${n}</h4><table>${list.map(e=>{ if(!e.datePay) pend+=e.amount; return `<tr><td>${getTypeTag(e.type)} ${getBankTag(e.bank)} <b>${e.num}</b></td><td>${e.datePay?'✔':'⏳'}</td><td align="right"><b>${formatMoney(e.amount)}</b></td></tr>`; }).join('')}</table></div>`;
+            }
+        });
+        if(tot > 0) {
+            st.innerHTML = (pend === 0) ? `<div style="background:#dcfce7; color:#166534; padding:15px; border-radius:12px; text-align:center; font-weight:bold; margin-bottom:15px; border:2px solid #bbf7d0;">✨ ¡FELICITACIONES! ✨<br>Todo cobrado.</div>` : `<div style="background:#fee2e2; color:#dc2626; padding:15px; border-radius:12px; text-align:center; font-weight:bold; margin-bottom:15px; border:2px solid #fecaca;">⚠️ FALTA COBRAR: ${formatMoney(pend)}</div>`;
+            div.insertAdjacentHTML('afterbegin', `<div class="total-box bg-blue"><div style="font-size:12px;">TOTAL FACTURADO</div><div class="total-amount">${formatMoney(tot)}</div></div>`);
+        } else { div.innerHTML = '<p style="text-align:center; padding:20px;">Sin facturación.</p>'; }
+    }
+    function loadCollectedView() {
+        const m = document.getElementById('collectedMonthSelector').value; const div = document.getElementById('collectedResults'); div.innerHTML = ''; if(!m) return;
+        let tot = 0;
+        Object.keys(companies).forEach(n => {
+            const list = companies[n].filter(e => e.datePay && e.datePay.startsWith(m) && (currentBankFilter === 'all' || e.bank === currentBankFilter));
+            if(list.length > 0) {
+                let sub = list.reduce((s,e)=>s+(e.amountCollected!==undefined?e.amountCollected:e.amount),0); tot += sub;
+                div.innerHTML += `<div class="card"><h4>${n}</h4><table>${list.map(e=>`<tr><td>${getTypeTag(e.type)} ${getBankTag(e.bank)} <b>${e.num}</b></td><td>${formatDate(e.datePay)}</td><td align="right"><b>${formatMoney(e.amountCollected||e.amount)}</b></td></tr>`).join('')}</table></div>`;
+            }
+        });
+        if(tot > 0) div.insertAdjacentHTML('afterbegin', `<div class="total-box" style="background:#16a34a"><div style="font-size:12px;">TOTAL COBRADO</div><div class="total-amount">${formatMoney(tot)}</div></div>`);
+        else div.innerHTML = '<p style="text-align:center; padding:20px;">Sin cobros.</p>';
+    }
+    function filterBank(f, b) { currentBankFilter = f; document.querySelectorAll('.bank-filter-btn').forEach(x => x.classList.remove('active')); b.classList.add('active'); loadCollectedView(); }
+    function populateCompanyFilter() { const s = document.getElementById('companyFilterSelect'); s.innerHTML = '<option value="">-- Elige una empresa --</option>'; Object.keys(companies).sort().forEach(c => s.innerHTML += `<option value="${c}">${c}</option>`); }
+    function loadCompanySpecificStats() {
+        const c = document.getElementById('companyFilterSelect').value, y = document.getElementById('filterYear').value, div = document.getElementById('companyFilterResults'); div.innerHTML = ''; if(!c) return;
+        let h = '<div class="card"><table style="font-size:12px;"><thead><tr><th>Mes</th><th>Facturado</th><th>Cobrado</th></tr></thead><tbody>', tF=0, tC=0;
+        for(let i=1; i<=12; i++) {
+            const m = `${y}-${i.toString().padStart(2, '0')}`;
+            const sF = companies[c].filter(e => e.dateBill.startsWith(m)).reduce((s,e)=>s+e.amount,0);
+            const sC = companies[c].filter(e => e.datePay && e.datePay.startsWith(m)).reduce((s,e)=>s+(e.amountCollected||e.amount),0);
+            tF += sF; tC += sC; if(sF > 0 || sC > 0) h += `<tr><td><b>${i.toString().padStart(2,'0')}</b></td><td style="color:#2563eb">${formatMoney(sF)}</td><td style="color:#16a34a; font-weight:bold;">${formatMoney(sC)}</td></tr>`;
+        }
+        div.innerHTML = h + `<tr><td><b>TOT</b></td><td><b>${formatMoney(tF)}</b></td><td><b>${formatMoney(tC)}</b></td></tr></tbody></table></div>`;
+    }
 
-    // INIT
-    const now = new Date().toISOString().slice(0, 7);
-    const currentYear = new Date().getFullYear();
-    document.getElementById('billingMonthSelector').value = now;
-    document.getElementById('collectedMonthSelector').value = now;
-    document.getElementById('expenseMonth').value = now;
+    // ==========================================
+    // SECCIÓN 2: GASTOS (CON BOTON SUMAR)
+    // ==========================================
+    function loadExpensesView() {
+        const m = document.getElementById('expenseMonth').value, grid = document.getElementById('fixedExpensesGrid'); if(!expenses[m]) expenses[m] = []; grid.innerHTML = '';
+        fixedExpenseList.forEach(name => {
+            const e = expenses[m].find(x => x.name === name), val = e ? e.amount : '';
+            const bg = (!val || val == 0) ? '#fef2f2; border:1px solid #fecaca;' : '#f8fafc; border:1px solid #e2e8f0;';
+            grid.innerHTML += `
+                <div class="expense-item-div" style="background:${bg}">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+                        <label style="font-size:10px; font-weight:700; color:#475569;">${name}</label>
+                        <button class="btn-add-expense" onclick="addToExpense('${name}')" title="Sumar monto">+</button>
+                    </div>
+                    <input type="number" class="fix-expense-input" id="fix_${name.replace(/\s/g,'')}" placeholder="0" value="${val}" onchange="autoSaveFixed('${name}')">
+                </div>`;
+        });
+        updateExpenseTotalDisplay();
+    }
+    function autoSaveFixed(n) { const m = document.getElementById('expenseMonth').value, v = parseFloat(document.getElementById("fix_"+n.replace(/\s/g,'')).value); let list = expenses[m], idx = list.findIndex(x=>x.name===n); if(!isNaN(v) && v > 0) { if(idx>=0) list[idx].amount=v; else list.push({id:Date.now(), name:n, amount:v}); } else if(idx>=0) list.splice(idx,1); saveAll(); loadExpensesView(); }
+    function addToExpense(n) {
+        const m = document.getElementById('expenseMonth').value; 
+        const e = expenses[m]?.find(x => x.name === n);
+        const currentVal = e ? e.amount : 0;
+        const addVal = prompt(`Monto a sumar a ${n} (Actual: ${formatMoney(currentVal)}):`);
+        if(addVal && !isNaN(parseFloat(addVal))) {
+            const newVal = currentVal + parseFloat(addVal);
+            if(!expenses[m]) expenses[m] = [];
+            const idx = expenses[m].findIndex(x => x.name === n);
+            if(idx >= 0) expenses[m][idx].amount = newVal; else expenses[m].push({id:Date.now(), name:n, amount:newVal});
+            saveAll(); loadExpensesView();
+        }
+    }
+    function updateExpenseTotalDisplay() {
+        const m = document.getElementById('expenseMonth').value, list = expenses[m] || [], tot = list.reduce((s,e)=>s+e.amount,0);
+        const extras = list.filter(e => !fixedExpenseList.includes(e.name));
+        document.getElementById('expensesResults').innerHTML = `<div class="total-box bg-red" style="margin-top:20px;"><div style="font-size:12px;">TOTAL GASTOS</div><div class="total-amount">${formatMoney(tot)}</div></div>` + (extras.length ? `<div class="card" style="margin-top:10px;"><h5>Extras</h5><table>${extras.map(e=>`<tr><td>${e.name}</td><td align="right"><b>${formatMoney(e.amount)}</b></td><td><button class="btn-sm btn-danger" onclick="delExpense('${m}',${e.id})">×</button></td></tr>`).join('')}</table></div>` : '');
+    }
+    function addExtraExpense() { const m = document.getElementById('expenseMonth').value, n = document.getElementById('extraName').value, a = parseFloat(document.getElementById('extraAmount').value); if(!n || isNaN(a)) return; if(!expenses[m]) expenses[m]=[]; expenses[m].push({id:Date.now(), name:n, amount:a}); document.getElementById('extraName').value=''; document.getElementById('extraAmount').value=''; saveAll(); loadExpensesView(); }
+    function delExpense(m, id) { if(confirm('¿Borrar?')) { expenses[m] = expenses[m].filter(e=>e.id!==id); saveAll(); loadExpensesView(); } }
+
+    // ==========================================
+    // SECCIÓN 3: SUELDOS (Calculo Auto + Boton Sumar)
+    // ==========================================
+    function loadSalaryView() {
+        const y = document.getElementById('salaryYear').value, tbody = document.getElementById('salaryTableBody'); tbody.innerHTML = '';
+        for(let i=1; i<=12; i++) {
+            const mKey = `${y}-${i.toString().padStart(2, '0')}`;
+            const d = salaries[mKey] || { sueldo:0, pres:0 };
+            const mauro = getMauroCobrosForMonth(mKey);
+            const yani = (d.sueldo||0) + (d.pres||0);
+            tbody.innerHTML += `
+            <tr>
+                <td><b>${i.toString().padStart(2,'0')}</b></td>
+                <td>
+                    <div class="salary-cell-wrapper">
+                        <input type="number" class="salary-input" value="${d.sueldo||''}" onchange="saveSal('${mKey}','sueldo',this.value)">
+                        <button class="btn-add-salary" onclick="addToSalary('${mKey}','sueldo')">+</button>
+                    </div>
+                </td>
+                <td>
+                    <div class="salary-cell-wrapper">
+                        <input type="number" class="salary-input" value="${d.pres||''}" onchange="saveSal('${mKey}','pres',this.value)">
+                        <button class="btn-add-salary" onclick="addToSalary('${mKey}','pres')">+</button>
+                    </div>
+                </td>
+                <td style="font-weight:bold; color:var(--salary-color);">${formatMoney(yani)}</td>
+                <td style="font-weight:bold; color:var(--primary);">${formatMoney(mauro)}</td>
+                <td><b>${formatMoney(yani+mauro)}</b></td>
+            </tr>`;
+        }
+    }
+    function saveSal(m, f, v) { if(!salaries[m]) salaries[m]={sueldo:0,pres:0}; salaries[m][f]=parseFloat(v)||0; saveAll(); loadSalaryView(); }
+
+    function addToSalary(mKey, field) {
+        if(!salaries[mKey]) salaries[mKey] = { sueldo:0, pres:0 };
+        const currentVal = salaries[mKey][field] || 0;
+        const addVal = prompt(`Monto a sumar (Actual: ${formatMoney(currentVal)}):`);
+        if (addVal && !isNaN(parseFloat(addVal))) {
+            const newVal = currentVal + parseFloat(addVal);
+            saveSal(mKey, field, newVal);
+        }
+    }
+
+    // ==========================================
+    // SECCIÓN 4: INGRESOS (ARCA MEJORADO)
+    // ==========================================
+    function loadTaxView() {
+        const y = document.getElementById('taxYear').value, tbody = document.getElementById('taxTableBody'); tbody.innerHTML = '';
+        let sy1=0, sy2=0, sm1=0, sm2=0;
+        for(let i=1; i<=12; i++) {
+            const mKey = `${y}-${i.toString().padStart(2, '0')}`;
+            const d = salaries[mKey] || { sueldo:0, pres:0, afip_yani:'', afip_mauro:'' };
+            
+            // --- NUEVO CALCULO: BASADO EN FACTURACION ---
+            const yVal = getBilledTotal(mKey, ['fac_yani']);
+            const mVal = getBilledTotal(mKey, ['fac_mauro', 'fac_quassar']);
+            
+            if(i<=6) { sy1+=yVal; sm1+=mVal; } else { sy2+=yVal; sm2+=mVal; }
+            tbody.innerHTML += `<tr><td><b>${i}</b></td><td>${formatMoney(yVal)}</td><td>${formatMoney(mVal)}</td><td style="color:#2563eb"><b>${formatMoney(yVal+mVal)}</b></td><td><input type="text" class="arca-input" value="${d.afip_yani||''}" onchange="saveAfip('${mKey}','afip_yani',this.value)"></td><td><input type="text" class="arca-input" value="${d.afip_mauro||''}" onchange="saveAfip('${mKey}','afip_mauro',this.value)"></td></tr>`;
+        }
+        document.getElementById('sumY1').innerText = formatMoney(sy1); document.getElementById('sumY2').innerText = formatMoney(sy2); document.getElementById('sumYT').innerText = formatMoney(sy1+sy2);
+        document.getElementById('sumM1').innerText = formatMoney(sm1); document.getElementById('sumM2').innerText = formatMoney(sm2); document.getElementById('sumMT').innerText = formatMoney(sm1+sm2);
+        document.getElementById('sumG1').innerText = formatMoney(sy1+sm1); document.getElementById('sumG2').innerText = formatMoney(sy2+sm2); document.getElementById('sumGT').innerText = formatMoney(sy1+sm1+sy2+sm2);
+    }
+    function saveAfip(m, f, v) { if(!salaries[m]) salaries[m]={sueldo:0,pres:0}; salaries[m][f]=v; saveAll(); }
+
+    function exportData() { const b = new Blob([JSON.stringify({companies,expenses,salaries})], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'backup.json'; a.click(); }
+    function importData() { const f = document.getElementById('importFile').files[0]; const r = new FileReader(); r.onload = (e) => { const d = JSON.parse(e.target.result); companies=d.companies; expenses=d.expenses; salaries=d.salaries; saveAll(); location.reload(); }; r.readAsText(f); }
+    
+    // --- BORRAR TODO ---
+    function eraseAllData() {
+        if(confirm("⛔ ¡ATENCIÓN! ⛔\n\n¿Estás seguro de que querés BORRAR TODO?\n\nSe perderán todas las empresas, gastos y sueldos de este dispositivo para siempre.")) {
+            if(confirm("¿De verdad? Esta es la última oportunidad para cancelar.")) {
+                localStorage.clear();
+                alert("Sistema reiniciado a cero.");
+                location.reload();
+            }
+        }
+    }
+
+    // --- AUTO FECHAS AL DIA ---
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.toISOString().slice(0, 7);
+
+    // Setear Fechas
+    document.getElementById('billingMonthSelector').value = currentMonth;
+    document.getElementById('collectedMonthSelector').value = currentMonth;
+    document.getElementById('expenseMonth').value = currentMonth;
     document.getElementById('salaryYear').value = currentYear;
     document.getElementById('taxYear').value = currentYear;
     document.getElementById('filterYear').value = currentYear;
-    
-    renderCompanies();
-    window.onclick = (e) => { if(e.target == document.getElementById('companyModal')) closeModal(); }
 
+    // Ejecutar
+    renderCompanies();
+    window.onclick = (e) => { 
+        // Lógica de cierre seguro
+        if (e.target == document.getElementById('companyModal')) {
+            tryCloseModal();
+        }
+    }
 </script>
 </body>
 </html>
