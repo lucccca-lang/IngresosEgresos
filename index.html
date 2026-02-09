@@ -256,7 +256,7 @@
                 <h4 style="margin:0 0 10px 0; font-size:12px; color:#64748b;">Gasto Extra</h4>
                 <div style="display:flex; gap:5px;">
                     <input type="text" id="extraName" placeholder="Ej: Farmacia" style="margin:0;">
-                    <input type="number" id="extraAmount" placeholder="$" style="width:80px; margin:0;">
+                    <input type="number" step="0.01" id="extraAmount" placeholder="$" style="width:80px; margin:0;">
                 </div>
                 <button class="btn-sm" style="background:#64748b; color:white; width:100%; margin-top:5px;" onclick="addExtraExpense()">+ Agregar</button>
             </div>
@@ -409,7 +409,7 @@
             </div>
             <div style="display:flex; gap:10px;">
                 <input type="text" id="invNum" placeholder="N° Factura">
-                <input type="number" id="amount" placeholder="$ Monto">
+                <input type="number" step="0.01" id="amount" placeholder="$ Monto">
             </div>
             <input type="text" id="entryDetail" placeholder="Detalle (Opcional)">
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
@@ -683,7 +683,7 @@
                         <label style="font-size:10px; font-weight:700; color:#475569;">${name}</label>
                         <button class="btn-add-expense" onclick="addToExpense('${name}')" title="Sumar monto">+</button>
                     </div>
-                    <input type="number" class="fix-expense-input" id="fix_${name.replace(/\s/g,'')}" placeholder="0" value="${val}" onchange="autoSaveFixed('${name}')">
+                    <input type="number" step="0.01" class="fix-expense-input" id="fix_${name.replace(/\s/g,'')}" placeholder="0" value="${val}" onchange="autoSaveFixed('${name}')">
                 </div>`;
         });
         updateExpenseTotalDisplay();
@@ -725,13 +725,13 @@
                 <td><b>${i.toString().padStart(2,'0')}</b></td>
                 <td>
                     <div class="salary-cell-wrapper">
-                        <input type="number" class="salary-input" value="${d.sueldo||''}" onchange="saveSal('${mKey}','sueldo',this.value)">
+                        <input type="number" step="0.01" class="salary-input" value="${d.sueldo||''}" onchange="saveSal('${mKey}','sueldo',this.value)">
                         <button class="btn-add-salary" onclick="addToSalary('${mKey}','sueldo')">+</button>
                     </div>
                 </td>
                 <td>
                     <div class="salary-cell-wrapper">
-                        <input type="number" class="salary-input" value="${d.pres||''}" onchange="saveSal('${mKey}','pres',this.value)">
+                        <input type="number" step="0.01" class="salary-input" value="${d.pres||''}" onchange="saveSal('${mKey}','pres',this.value)">
                         <button class="btn-add-salary" onclick="addToSalary('${mKey}','pres')">+</button>
                     </div>
                 </td>
