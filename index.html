@@ -688,7 +688,7 @@
     }
 
     // ==========================================
-    // SECCIÓN 2: GASTOS (CON BOTON SUMAR)
+    // SECCIÓN 2: GASTOS (CON BOTON SUMAR Y DESGLOSE TOTAL)
     // ==========================================
     function loadExpensesView() {
         const m = document.getElementById('expenseMonth').value, grid = document.getElementById('fixedExpensesGrid'); if(!expenses[m]) expenses[m] = []; grid.innerHTML = '';
@@ -712,20 +712,16 @@
         const m = document.getElementById('expenseMonth').value;
         const input = document.getElementById("fix_"+n.replace(/\s/g,''));
         let raw = input.value;
-        
-        // Limpiar formato antes de guardar el número puro
         if(raw.includes('$')) raw = raw.replace('$', '').replace(/\./g, '').replace(',', '.').trim();
-        
         const v = parseFloat(raw);
         let list = expenses[m], idx = list.findIndex(x=>x.name===n); 
-        
         if(!isNaN(v) && v > 0) { 
             if(idx>=0) list[idx].amount=v; else list.push({id:Date.now(), name:n, amount:v}); 
         } else if(idx>=0) {
             list.splice(idx,1); 
         }
         saveAll(); 
-        updateExpenseTotalDisplay(); // Solo actualiza totales, no redibuja inputs para no perder foco
+        updateExpenseTotalDisplay();
     }
 
     function addToExpense(n) {
@@ -734,7 +730,6 @@
         const currentVal = e ? e.amount : 0;
         const addVal = prompt(`Monto a sumar a ${n} (Actual: ${formatMoney(currentVal)}):`);
         if(addVal) {
-            // Permitir que usuario ingrese con coma o punto
             let cleanAdd = addVal.replace(',', '.');
             if(!isNaN(parseFloat(cleanAdd))) {
                 const newVal = currentVal + parseFloat(cleanAdd);
@@ -745,23 +740,49 @@
             }
         }
     }
+
     function updateExpenseTotalDisplay() {
-        const m = document.getElementById('expenseMonth').value, list = expenses[m] || [], tot = list.reduce((s,e)=>s+e.amount,0);
+        const m = document.getElementById('expenseMonth').value; // Ej: "2026-02"
+        const currentYear = m.split('-')[0]; // "2026"
+        const list = expenses[m] || [];
+        
+        // 1. Total del Mes seleccionado
+        const totMonth = list.reduce((s,e)=>s+e.amount,0);
+
+        // 2. Total del Año seleccionado
+        let totYear = 0;
+        Object.keys(expenses).forEach(key => {
+            if(key.startsWith(currentYear)) {
+                totYear += expenses[key].reduce((s,e)=>s+e.amount,0);
+            }
+        });
+
         const extras = list.filter(e => !fixedExpenseList.includes(e.name));
-        document.getElementById('expensesResults').innerHTML = `<div class="total-box bg-red" style="margin-top:20px;"><div style="font-size:12px;">TOTAL GASTOS</div><div class="total-amount">${formatMoney(tot)}</div></div>` + (extras.length ? `<div class="card" style="margin-top:10px;"><h5>Extras</h5><table>${extras.map(e=>`<tr><td>${e.name}</td><td align="right"><b>${formatMoney(e.amount)}</b></td><td><button class="btn-sm btn-danger" onclick="delExpense('${m}',${e.id})">×</button></td></tr>`).join('')}</table></div>` : '');
+        
+        // Renderizado con desglose Mes/Año
+        document.getElementById('expensesResults').innerHTML = `
+            <div class="total-box bg-red" style="margin-top:20px; display:flex; justify-content:space-around; align-items:center;">
+               <div style="text-align:center;">
+                   <div style="font-size:11px; opacity:0.8;">TOTAL MES</div>
+                   <div style="font-size:22px; font-weight:800;">${formatMoney(totMonth)}</div>
+               </div>
+               <div style="width:1px; height:40px; background:rgba(255,255,255,0.3);"></div>
+               <div style="text-align:center;">
+                   <div style="font-size:11px; opacity:0.8;">TOTAL AÑO ${currentYear}</div>
+                   <div style="font-size:22px; font-weight:800;">${formatMoney(totYear)}</div>
+               </div>
+            </div>` 
+            + (extras.length ? `<div class="card" style="margin-top:10px;"><h5>Extras</h5><table>${extras.map(e=>`<tr><td>${e.name}</td><td align="right"><b>${formatMoney(e.amount)}</b></td><td><button class="btn-sm btn-danger" onclick="delExpense('${m}',${e.id})">×</button></td></tr>`).join('')}</table></div>` : '');
     }
     
     function addExtraExpense() { 
         const m = document.getElementById('expenseMonth').value, n = document.getElementById('extraName').value;
         let rawA = document.getElementById('extraAmount').value;
-        // Limpiar formato
         if(rawA.includes('$')) rawA = rawA.replace('$', '').replace(/\./g, '').replace(',', '.').trim();
         const a = parseFloat(rawA); 
-        
         if(!n || isNaN(a)) return; 
         if(!expenses[m]) expenses[m]=[]; 
         expenses[m].push({id:Date.now(), name:n, amount:a}); 
-        
         document.getElementById('extraName').value=''; 
         document.getElementById('extraAmount').value=''; 
         saveAll(); loadExpensesView(); 
@@ -824,11 +845,8 @@
         for(let i=1; i<=12; i++) {
             const mKey = `${y}-${i.toString().padStart(2, '0')}`;
             const d = salaries[mKey] || { sueldo:0, pres:0, afip_yani:'', afip_mauro:'' };
-            
-            // --- NUEVO CALCULO: BASADO EN FACTURACION ---
             const yVal = getBilledTotal(mKey, ['fac_yani']);
             const mVal = getBilledTotal(mKey, ['fac_mauro', 'fac_quassar']);
-            
             if(i<=6) { sy1+=yVal; sm1+=mVal; } else { sy2+=yVal; sm2+=mVal; }
             tbody.innerHTML += `<tr><td><b>${i}</b></td><td>${formatMoney(yVal)}</td><td>${formatMoney(mVal)}</td><td style="color:#2563eb"><b>${formatMoney(yVal+mVal)}</b></td><td><input type="text" class="arca-input" value="${d.afip_yani||''}" onchange="saveAfip('${mKey}','afip_yani',this.value)"></td><td><input type="text" class="arca-input" value="${d.afip_mauro||''}" onchange="saveAfip('${mKey}','afip_mauro',this.value)"></td></tr>`;
         }
