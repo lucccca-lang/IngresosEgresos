@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistema de Gestión</title>
+    <title>Sistema de Gestión V32</title>
     <style>
         /* --- ESTILOS VISUALES --- */
         :root {
@@ -112,6 +112,29 @@
         .btn-danger { background: #fee2e2; color: #dc2626; }
         .btn-edit { background: #fef08a; color: #854d0e; border: 1px solid #fde047; }
         
+        /* TOAST NOTIFICATION MEJORADO */
+        #toast {
+            visibility: hidden; 
+            min-width: 180px; 
+            background-color: #16a34a; /* Verde éxito */
+            color: #fff; 
+            text-align: center; 
+            border-radius: 50px; 
+            padding: 12px 20px;
+            position: fixed; 
+            z-index: 9999; /* Por encima de TODO */
+            left: 50%; 
+            bottom: 30px;
+            transform: translateX(-50%); /* Centrado perfecto */
+            font-size: 14px; 
+            font-weight: 800; 
+            box-shadow: 0 4px 15px rgba(22, 163, 74, 0.4);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            opacity: 0; 
+            transition: opacity 0.3s, bottom 0.3s;
+        }
+        #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+
         /* BOTONES DE GESTIÓN EMPRESA */
         .company-actions { display: flex; gap: 10px; margin-bottom: 10px; }
         .btn-action-outline { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #475569; font-size: 11px; font-weight: bold; cursor: pointer; }
@@ -386,6 +409,8 @@
 
 </div>
 
+<div id="toast">💾 Guardado Exitosamente</div>
+
 <div id="companyModal" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -437,7 +462,7 @@
 </div>
 
 <script>
-    // --- DATOS ---
+    // --- DATOS (MISMAS LLAVES PARA NO PERDER DATOS) ---
     let companies = JSON.parse(localStorage.getItem('sys_companies_v5')) || {};
     let expenses = JSON.parse(localStorage.getItem('sys_expenses_v5')) || {};
     let salaries = JSON.parse(localStorage.getItem('sys_salaries_v2')) || {}; 
@@ -447,7 +472,7 @@
     let editingEntryId = null; 
 
     const fixedExpenseList = ["AMEX", "TARJ FRANCES", "FRANCES MASTER", "TARJ GALICIA", "TARJ ICBC", "TARJ HIPOTECARIO", "TARJ BANCO NACION", "SERV-LUZ", "GAS", "EXPENSAS", "NAFTA", "SUPERMERCADO", "MUNICIPAL", "ARBA CASA Y PATENTE", "IIGG YANINA", "IIGG MAURO", "MONOTRIBUTO", "COLEGIO LUCCA", "COLEGIO EMMA", "HONORARIOS", "TELEFONOS", "EXTRAS"];
-    const expenseColors = ['#f8fafc', '#fef9c3', '#dcfce7', '#fee2e2']; // 0:Def(No usado en auto), 1:Yel, 2:Grn(Ok), 3:Red(Alert)
+    const expenseColors = ['#f8fafc', '#fef9c3', '#dcfce7', '#fee2e2']; // 0:Def, 1:Yel, 2:Grn, 3:Red
 
     // --- UTILS ---
     const formatMoney = (val) => '$ ' + (val || 0).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -459,17 +484,23 @@
         return '<span class="tag bg-mau">MAU</span>';
     };
 
+    // --- TOAST ---
+    function showToast() {
+        const t = document.getElementById("toast");
+        t.className = "show";
+        setTimeout(() => { t.className = t.className.replace("show", ""); }, 2000);
+    }
+
     // --- MANEJO DE INPUTS DINERO ---
     function cleanInput(e) {
         let v = e.value;
-        // Quitar $ y puntos, cambiar coma por punto
         v = v.replace('$', '').replace(/\./g, '').replace(',', '.').trim();
         e.value = v;
-        e.type = 'number'; // Permitir teclado numérico
+        e.type = 'number';
     }
 
     function fmtInput(e) {
-        e.type = 'text'; // Volver a texto para mostrar símbolos
+        e.type = 'text';
         let raw = e.value;
         if(raw === '') return;
         let v = parseFloat(raw);
@@ -481,9 +512,10 @@
         localStorage.setItem('sys_companies_v5', JSON.stringify(companies));
         localStorage.setItem('sys_expenses_v5', JSON.stringify(expenses));
         localStorage.setItem('sys_salaries_v2', JSON.stringify(salaries));
+        showToast(); // Feedback visual
     }
 
-    // --- CALCULO AUTOMATICO PARA MAURO (Cobrado - Cashflow) ---
+    // --- CALCULO AUTOMATICO PARA MAURO ---
     function getMauroCobrosForMonth(monthKey) {
         let total = 0;
         Object.values(companies).forEach(entries => {
@@ -496,7 +528,7 @@
         return total;
     }
 
-    // --- NUEVO: CALCULO FACTURACION (ARCA/Tax) ---
+    // --- CALCULO FACTURACION ---
     function getBilledTotal(monthKey, allowedTypes) {
         let total = 0;
         Object.values(companies).forEach(entries => {
@@ -542,7 +574,6 @@
 
     function openCompanyModal(name) { currentCompany = name; document.getElementById('modalTitle').textContent = name; document.getElementById('companyModal').style.display = 'flex'; cancelEditMode(); renderCompanyHistory(); }
     
-    // --- LOGICA CIERRE MODAL SEGURO ---
     function hasUnsavedData() {
         const num = document.getElementById('invNum').value.trim();
         const amt = document.getElementById('amount').value.trim();
@@ -690,20 +721,19 @@
     }
 
     // ==========================================
-    // SECCIÓN 2: GASTOS (CON BOTON SUMAR Y DESGLOSE TOTAL)
+    // SECCIÓN 2: GASTOS (LOGICA COLOR AUTO/MANUAL)
     // ==========================================
     function loadExpensesView() {
         const m = document.getElementById('expenseMonth').value, grid = document.getElementById('fixedExpensesGrid'); if(!expenses[m]) expenses[m] = []; grid.innerHTML = '';
         fixedExpenseList.forEach(name => {
             const e = expenses[m].find(x => x.name === name), val = e ? e.amount : '', userColor = (e && e.color) ? e.color : null;
             
-            // LOGICA DE COLOR AUTOMATICA VS MANUAL
             let bg;
             if (userColor !== null && userColor !== undefined) {
-                // Si el usuario eligió manualmente (0-3), respetarlo
+                // COLOR MANUAL FIJO
                 bg = expenseColors[userColor];
             } else {
-                // Lógica automática: Si hay monto > 0 es Verde(2), si es 0/Vacío es Rojo(3)
+                // COLOR AUTOMATICO: Rojo si vacío, Verde si tiene monto
                 bg = (val > 0) ? expenseColors[2] : expenseColors[3];
             }
 
@@ -730,18 +760,22 @@
         if(raw.includes('$')) raw = raw.replace('$', '').replace(/\./g, '').replace(',', '.').trim();
         const v = parseFloat(raw);
         let list = expenses[m], idx = list.findIndex(x=>x.name===n); 
+        
         if(!isNaN(v) && v > 0) { 
             if(idx>=0) list[idx].amount=v; else list.push({id:Date.now(), name:n, amount:v}); 
         } else if(idx>=0) {
-            // Si borra el monto, si tenía color manual lo respetamos, si no lo borramos entero para que vuelva a rojo auto
-            if(list[idx].color !== undefined) list[idx].amount = 0;
-            else list.splice(idx,1); 
+            // SI BORRA EL MONTO:
+            // Si tenía color manual, solo ponemos monto a 0 (mantiene color manual)
+            // Si NO tenía color manual, borramos la entrada completa para que vuelva al estado "rojo automático"
+            if(list[idx].color !== undefined) {
+                list[idx].amount = 0;
+            } else {
+                list.splice(idx,1); 
+            }
         }
         saveAll(); 
         updateExpenseTotalDisplay();
-        // Recargar la vista para actualizar el color automático si corresponde
-        loadExpensesView();
-        // Devolver el foco? No necesario en celular suele ocultar teclado
+        loadExpensesView(); // Recargar para actualizar colores auto
     }
 
     function addToExpense(n) {
@@ -766,32 +800,36 @@
         if(!expenses[m]) expenses[m] = [];
         let idx = expenses[m].findIndex(x => x.name === n);
         
-        // Si no existe (estaba en rojo auto), lo creamos con 0 para poder asignarle color manual
+        // Si no existe (estaba en rojo auto), lo creamos para asignarle color manual
         if(idx === -1) {
             expenses[m].push({id:Date.now(), name:n, amount:0, color:0});
             idx = expenses[m].length - 1;
         } else {
-            // Si ya existía pero no tenía color manual (estaba en verde auto), inicializamos en 0
+            // Si ya existía pero no tenía color manual (estaba en verde auto), inicializamos
             if(expenses[m][idx].color === undefined) expenses[m][idx].color = 0;
         }
 
         const curColor = expenses[m][idx].color;
-        // Ciclo: 0(Blanco)->1(Amarillo)->2(Verde)->3(Rojo)->Borrar manual(Auto)
-        // Pero el usuario pidió elegir. Hagamos ciclo simple de 4 colores.
-        expenses[m][idx].color = (curColor + 1) % expenseColors.length;
+        // Ciclo manual: Blanco -> Amarillo -> Verde -> Rojo -> Auto (borrar prop color)
+        const nextColor = (curColor + 1);
+        
+        if(nextColor >= expenseColors.length) {
+            // Volver a automático (borrar propiedad color)
+            delete expenses[m][idx].color;
+            // Si el monto es 0 y volvemos a auto, borrar la entrada completa para que sea rojo limpio
+            if(expenses[m][idx].amount === 0) expenses[m].splice(idx,1);
+        } else {
+            expenses[m][idx].color = nextColor;
+        }
         
         saveAll(); loadExpensesView();
     }
 
     function updateExpenseTotalDisplay() {
-        const m = document.getElementById('expenseMonth').value; // Ej: "2026-02"
-        const currentYear = m.split('-')[0]; // "2026"
+        const m = document.getElementById('expenseMonth').value;
+        const currentYear = m.split('-')[0];
         const list = expenses[m] || [];
-        
-        // 1. Total del Mes seleccionado
         const totMonth = list.reduce((s,e)=>s+e.amount,0);
-
-        // 2. Total del Año seleccionado
         let totYear = 0;
         Object.keys(expenses).forEach(key => {
             if(key.startsWith(currentYear)) {
@@ -801,7 +839,6 @@
 
         const extras = list.filter(e => !fixedExpenseList.includes(e.name));
         
-        // Renderizado con desglose Mes/Año
         document.getElementById('expensesResults').innerHTML = `
             <div class="total-box bg-red" style="margin-top:20px; display:flex; justify-content:space-around; align-items:center;">
                <div style="text-align:center;">
