@@ -92,16 +92,17 @@
         .arca-input:focus { background: #fff !important; border-color: #7c3aed !important; }
 
         /* INPUTS GASTOS */
-        .fix-expense-input { margin: 0 !important; text-align: right; font-weight: bold; color: #be123c; font-size: 14px; transition: background 0.3s; }
-        .expense-item-div { padding: 8px; border-radius: 8px; transition: 0.3s; position: relative; }
+        .fix-expense-input { margin: 0 !important; text-align: right; font-weight: bold; color: #334155; font-size: 14px; transition: background 0.3s; background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.1); }
+        .expense-item-div { padding: 8px; border-radius: 8px; transition: 0.3s; position: relative; border: 1px solid #e2e8f0; }
         
-        /* BOTON SUMAR GASTO */
-        .btn-add-expense {
-            background: #e2e8f0; color: #475569; border: none; border-radius: 4px;
-            width: 20px; height: 20px; font-size: 14px; font-weight: bold; cursor: pointer;
+        /* BOTONES GASTO (SUMAR Y COLOR) */
+        .expense-tools { display: flex; gap: 5px; }
+        .btn-tool {
+            background: rgba(255,255,255,0.7); color: #475569; border: 1px solid #cbd5e1; border-radius: 4px;
+            width: 22px; height: 22px; font-size: 12px; font-weight: bold; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
         }
-        .btn-add-expense:active { background: #cbd5e1; }
+        .btn-tool:active { background: #cbd5e1; }
 
         /* BOTONES */
         .btn-primary { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; }
@@ -250,7 +251,7 @@
                 <input type="month" id="expenseMonth" onchange="loadExpensesView()" style="width:auto; margin:0;">
             </div>
             <div id="fixedExpensesGrid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px;"></div>
-            <p style="text-align:center; font-size:11px; color:#64748b; margin-top:0;">* Toca el botón <b>+</b> para sumar al monto existente.</p>
+            <p style="text-align:center; font-size:11px; color:#64748b; margin-top:0;">* Automático: Rojo (vacío) / Verde (cargado). Manual: 🎨.</p>
             <hr style="margin: 20px 0; border:0; border-top:1px dashed #ccc;">
             <div style="background:#f1f5f9; padding:10px; border-radius:8px;">
                 <h4 style="margin:0 0 10px 0; font-size:12px; color:#64748b;">Gasto Extra</h4>
@@ -446,6 +447,7 @@
     let editingEntryId = null; 
 
     const fixedExpenseList = ["AMEX", "TARJ FRANCES", "FRANCES MASTER", "TARJ GALICIA", "TARJ ICBC", "TARJ HIPOTECARIO", "TARJ BANCO NACION", "SERV-LUZ", "GAS", "EXPENSAS", "NAFTA", "SUPERMERCADO", "MUNICIPAL", "ARBA CASA Y PATENTE", "IIGG YANINA", "IIGG MAURO", "MONOTRIBUTO", "COLEGIO LUCCA", "COLEGIO EMMA", "HONORARIOS", "TELEFONOS", "EXTRAS"];
+    const expenseColors = ['#f8fafc', '#fef9c3', '#dcfce7', '#fee2e2']; // 0:Def(No usado en auto), 1:Yel, 2:Grn(Ok), 3:Red(Alert)
 
     // --- UTILS ---
     const formatMoney = (val) => '$ ' + (val || 0).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -693,14 +695,27 @@
     function loadExpensesView() {
         const m = document.getElementById('expenseMonth').value, grid = document.getElementById('fixedExpensesGrid'); if(!expenses[m]) expenses[m] = []; grid.innerHTML = '';
         fixedExpenseList.forEach(name => {
-            const e = expenses[m].find(x => x.name === name), val = e ? e.amount : '';
-            const bg = (!val || val == 0) ? '#fef2f2; border:1px solid #fecaca;' : '#f8fafc; border:1px solid #e2e8f0;';
+            const e = expenses[m].find(x => x.name === name), val = e ? e.amount : '', userColor = (e && e.color) ? e.color : null;
+            
+            // LOGICA DE COLOR AUTOMATICA VS MANUAL
+            let bg;
+            if (userColor !== null && userColor !== undefined) {
+                // Si el usuario eligió manualmente (0-3), respetarlo
+                bg = expenseColors[userColor];
+            } else {
+                // Lógica automática: Si hay monto > 0 es Verde(2), si es 0/Vacío es Rojo(3)
+                bg = (val > 0) ? expenseColors[2] : expenseColors[3];
+            }
+
             const fmtVal = val ? formatMoney(val) : '';
             grid.innerHTML += `
                 <div class="expense-item-div" style="background:${bg}">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
                         <label style="font-size:10px; font-weight:700; color:#475569;">${name}</label>
-                        <button class="btn-add-expense" onclick="addToExpense('${name}')" title="Sumar monto">+</button>
+                        <div class="expense-tools">
+                           <button class="btn-tool" onclick="cycleExpenseColor('${name}')">🎨</button>
+                           <button class="btn-tool" onclick="addToExpense('${name}')">+</button>
+                        </div>
                     </div>
                     <input type="text" inputmode="decimal" class="fix-expense-input" id="fix_${name.replace(/\s/g,'')}" placeholder="0" value="${fmtVal}" onfocus="cleanInput(this)" onblur="fmtInput(this); autoSaveFixed('${name}')">
                 </div>`;
@@ -718,10 +733,15 @@
         if(!isNaN(v) && v > 0) { 
             if(idx>=0) list[idx].amount=v; else list.push({id:Date.now(), name:n, amount:v}); 
         } else if(idx>=0) {
-            list.splice(idx,1); 
+            // Si borra el monto, si tenía color manual lo respetamos, si no lo borramos entero para que vuelva a rojo auto
+            if(list[idx].color !== undefined) list[idx].amount = 0;
+            else list.splice(idx,1); 
         }
         saveAll(); 
         updateExpenseTotalDisplay();
+        // Recargar la vista para actualizar el color automático si corresponde
+        loadExpensesView();
+        // Devolver el foco? No necesario en celular suele ocultar teclado
     }
 
     function addToExpense(n) {
@@ -739,6 +759,28 @@
                 saveAll(); loadExpensesView();
             }
         }
+    }
+
+    function cycleExpenseColor(n) {
+        const m = document.getElementById('expenseMonth').value; 
+        if(!expenses[m]) expenses[m] = [];
+        let idx = expenses[m].findIndex(x => x.name === n);
+        
+        // Si no existe (estaba en rojo auto), lo creamos con 0 para poder asignarle color manual
+        if(idx === -1) {
+            expenses[m].push({id:Date.now(), name:n, amount:0, color:0});
+            idx = expenses[m].length - 1;
+        } else {
+            // Si ya existía pero no tenía color manual (estaba en verde auto), inicializamos en 0
+            if(expenses[m][idx].color === undefined) expenses[m][idx].color = 0;
+        }
+
+        const curColor = expenses[m][idx].color;
+        // Ciclo: 0(Blanco)->1(Amarillo)->2(Verde)->3(Rojo)->Borrar manual(Auto)
+        // Pero el usuario pidió elegir. Hagamos ciclo simple de 4 colores.
+        expenses[m][idx].color = (curColor + 1) % expenseColors.length;
+        
+        saveAll(); loadExpensesView();
     }
 
     function updateExpenseTotalDisplay() {
