@@ -256,7 +256,7 @@
                 <h4 style="margin:0 0 10px 0; font-size:12px; color:#64748b;">Gasto Extra</h4>
                 <div style="display:flex; gap:5px;">
                     <input type="text" id="extraName" placeholder="Ej: Farmacia" style="margin:0;">
-                    <input type="number" step="0.01" id="extraAmount" placeholder="$" style="width:80px; margin:0;">
+                    <input type="text" inputmode="decimal" id="extraAmount" placeholder="$" style="width:80px; margin:0;" onfocus="cleanInput(this)" onblur="fmtInput(this)">
                 </div>
                 <button class="btn-sm" style="background:#64748b; color:white; width:100%; margin-top:5px;" onclick="addExtraExpense()">+ Agregar</button>
             </div>
@@ -448,7 +448,7 @@
     const fixedExpenseList = ["AMEX", "TARJ FRANCES", "FRANCES MASTER", "TARJ GALICIA", "TARJ ICBC", "TARJ HIPOTECARIO", "TARJ BANCO NACION", "SERV-LUZ", "GAS", "EXPENSAS", "NAFTA", "SUPERMERCADO", "MUNICIPAL", "ARBA CASA Y PATENTE", "IIGG YANINA", "IIGG MAURO", "MONOTRIBUTO", "COLEGIO LUCCA", "COLEGIO EMMA", "HONORARIOS", "TELEFONOS", "EXTRAS"];
 
     // --- UTILS ---
-    const formatMoney = (val) => '$' + (val || 0).toLocaleString('es-AR');
+    const formatMoney = (val) => '$ ' + (val || 0).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     const formatDate = (s) => { if(!s) return '-'; const [y,m,d]=s.split('-'); return `${d}/${m}`; };
     const getBankTag = (bank) => bank === 'galicia' ? '<span class="tag bg-gal">GAL</span>' : '<span class="tag bg-fra">FRA</span>';
     const getTypeTag = (type) => {
@@ -456,6 +456,24 @@
         if(type === 'fac_quassar') return '<span class="tag bg-qua">QUA</span>';
         return '<span class="tag bg-mau">MAU</span>';
     };
+
+    // --- MANEJO DE INPUTS DINERO ---
+    function cleanInput(e) {
+        let v = e.value;
+        // Quitar $ y puntos, cambiar coma por punto
+        v = v.replace('$', '').replace(/\./g, '').replace(',', '.').trim();
+        e.value = v;
+        e.type = 'number'; // Permitir teclado numérico
+    }
+
+    function fmtInput(e) {
+        e.type = 'text'; // Volver a texto para mostrar símbolos
+        let raw = e.value;
+        if(raw === '') return;
+        let v = parseFloat(raw);
+        if(isNaN(v)) { e.value = ''; return; }
+        e.value = formatMoney(v);
+    }
 
     function saveAll() {
         localStorage.setItem('sys_companies_v5', JSON.stringify(companies));
@@ -677,29 +695,54 @@
         fixedExpenseList.forEach(name => {
             const e = expenses[m].find(x => x.name === name), val = e ? e.amount : '';
             const bg = (!val || val == 0) ? '#fef2f2; border:1px solid #fecaca;' : '#f8fafc; border:1px solid #e2e8f0;';
+            const fmtVal = val ? formatMoney(val) : '';
             grid.innerHTML += `
                 <div class="expense-item-div" style="background:${bg}">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
                         <label style="font-size:10px; font-weight:700; color:#475569;">${name}</label>
                         <button class="btn-add-expense" onclick="addToExpense('${name}')" title="Sumar monto">+</button>
                     </div>
-                    <input type="number" step="0.01" class="fix-expense-input" id="fix_${name.replace(/\s/g,'')}" placeholder="0" value="${val}" onchange="autoSaveFixed('${name}')">
+                    <input type="text" inputmode="decimal" class="fix-expense-input" id="fix_${name.replace(/\s/g,'')}" placeholder="0" value="${fmtVal}" onfocus="cleanInput(this)" onblur="fmtInput(this); autoSaveFixed('${name}')">
                 </div>`;
         });
         updateExpenseTotalDisplay();
     }
-    function autoSaveFixed(n) { const m = document.getElementById('expenseMonth').value, v = parseFloat(document.getElementById("fix_"+n.replace(/\s/g,'')).value); let list = expenses[m], idx = list.findIndex(x=>x.name===n); if(!isNaN(v) && v > 0) { if(idx>=0) list[idx].amount=v; else list.push({id:Date.now(), name:n, amount:v}); } else if(idx>=0) list.splice(idx,1); saveAll(); loadExpensesView(); }
+    
+    function autoSaveFixed(n) { 
+        const m = document.getElementById('expenseMonth').value;
+        const input = document.getElementById("fix_"+n.replace(/\s/g,''));
+        let raw = input.value;
+        
+        // Limpiar formato antes de guardar el número puro
+        if(raw.includes('$')) raw = raw.replace('$', '').replace(/\./g, '').replace(',', '.').trim();
+        
+        const v = parseFloat(raw);
+        let list = expenses[m], idx = list.findIndex(x=>x.name===n); 
+        
+        if(!isNaN(v) && v > 0) { 
+            if(idx>=0) list[idx].amount=v; else list.push({id:Date.now(), name:n, amount:v}); 
+        } else if(idx>=0) {
+            list.splice(idx,1); 
+        }
+        saveAll(); 
+        updateExpenseTotalDisplay(); // Solo actualiza totales, no redibuja inputs para no perder foco
+    }
+
     function addToExpense(n) {
         const m = document.getElementById('expenseMonth').value; 
         const e = expenses[m]?.find(x => x.name === n);
         const currentVal = e ? e.amount : 0;
         const addVal = prompt(`Monto a sumar a ${n} (Actual: ${formatMoney(currentVal)}):`);
-        if(addVal && !isNaN(parseFloat(addVal))) {
-            const newVal = currentVal + parseFloat(addVal);
-            if(!expenses[m]) expenses[m] = [];
-            const idx = expenses[m].findIndex(x => x.name === n);
-            if(idx >= 0) expenses[m][idx].amount = newVal; else expenses[m].push({id:Date.now(), name:n, amount:newVal});
-            saveAll(); loadExpensesView();
+        if(addVal) {
+            // Permitir que usuario ingrese con coma o punto
+            let cleanAdd = addVal.replace(',', '.');
+            if(!isNaN(parseFloat(cleanAdd))) {
+                const newVal = currentVal + parseFloat(cleanAdd);
+                if(!expenses[m]) expenses[m] = [];
+                const idx = expenses[m].findIndex(x => x.name === n);
+                if(idx >= 0) expenses[m][idx].amount = newVal; else expenses[m].push({id:Date.now(), name:n, amount:newVal});
+                saveAll(); loadExpensesView();
+            }
         }
     }
     function updateExpenseTotalDisplay() {
@@ -707,7 +750,23 @@
         const extras = list.filter(e => !fixedExpenseList.includes(e.name));
         document.getElementById('expensesResults').innerHTML = `<div class="total-box bg-red" style="margin-top:20px;"><div style="font-size:12px;">TOTAL GASTOS</div><div class="total-amount">${formatMoney(tot)}</div></div>` + (extras.length ? `<div class="card" style="margin-top:10px;"><h5>Extras</h5><table>${extras.map(e=>`<tr><td>${e.name}</td><td align="right"><b>${formatMoney(e.amount)}</b></td><td><button class="btn-sm btn-danger" onclick="delExpense('${m}',${e.id})">×</button></td></tr>`).join('')}</table></div>` : '');
     }
-    function addExtraExpense() { const m = document.getElementById('expenseMonth').value, n = document.getElementById('extraName').value, a = parseFloat(document.getElementById('extraAmount').value); if(!n || isNaN(a)) return; if(!expenses[m]) expenses[m]=[]; expenses[m].push({id:Date.now(), name:n, amount:a}); document.getElementById('extraName').value=''; document.getElementById('extraAmount').value=''; saveAll(); loadExpensesView(); }
+    
+    function addExtraExpense() { 
+        const m = document.getElementById('expenseMonth').value, n = document.getElementById('extraName').value;
+        let rawA = document.getElementById('extraAmount').value;
+        // Limpiar formato
+        if(rawA.includes('$')) rawA = rawA.replace('$', '').replace(/\./g, '').replace(',', '.').trim();
+        const a = parseFloat(rawA); 
+        
+        if(!n || isNaN(a)) return; 
+        if(!expenses[m]) expenses[m]=[]; 
+        expenses[m].push({id:Date.now(), name:n, amount:a}); 
+        
+        document.getElementById('extraName').value=''; 
+        document.getElementById('extraAmount').value=''; 
+        saveAll(); loadExpensesView(); 
+    }
+    
     function delExpense(m, id) { if(confirm('¿Borrar?')) { expenses[m] = expenses[m].filter(e=>e.id!==id); saveAll(); loadExpensesView(); } }
 
     // ==========================================
@@ -747,9 +806,12 @@
         if(!salaries[mKey]) salaries[mKey] = { sueldo:0, pres:0 };
         const currentVal = salaries[mKey][field] || 0;
         const addVal = prompt(`Monto a sumar (Actual: ${formatMoney(currentVal)}):`);
-        if (addVal && !isNaN(parseFloat(addVal))) {
-            const newVal = currentVal + parseFloat(addVal);
-            saveSal(mKey, field, newVal);
+        if (addVal) {
+            let cleanAdd = addVal.replace(',', '.');
+            if(!isNaN(parseFloat(cleanAdd))) {
+                const newVal = currentVal + parseFloat(cleanAdd);
+                saveSal(mKey, field, newVal);
+            }
         }
     }
 
