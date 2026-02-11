@@ -126,7 +126,7 @@
 
         /* INPUTS GASTOS */
         .fix-expense-input { margin: 0 !important; text-align: right; font-weight: bold; color: #334155; font-size: 14px; transition: background 0.3s; background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.1); }
-        [data-theme="dark"] .fix-expense-input { color: #0f172a; } /* Texto oscuro para que se lea sobre los colores pastel */
+        [data-theme="dark"] .fix-expense-input { color: #0f172a; } 
         
         .expense-item-div { padding: 8px; border-radius: 8px; transition: 0.3s; position: relative; border: 1px solid var(--border); }
         
@@ -142,6 +142,7 @@
         .btn-primary { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; }
         .btn-data { background: var(--data-color); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; }
         .btn-excel { background: #15803d; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; margin-bottom: 10px; }
+        .btn-history { background: #8b5cf6; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; margin-bottom: 10px; }
         
         .btn-sm { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; border: none; cursor: pointer; }
         .btn-success { background: #16a34a; color: white; }
@@ -195,6 +196,12 @@
         .modal-content { background: var(--white); width: 100%; max-width: 600px; border-radius: 20px 20px 0 0; padding: 20px; max-height: 90vh; overflow-y: auto; color: var(--text-main); }
         @media(min-width: 600px) { .modal { align-items: center; } .modal-content { border-radius: 16px; width: 90%; } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* LOGS TABLE */
+        .log-row { border-bottom: 1px solid var(--border); padding: 8px 0; font-size: 11px; }
+        .log-ts { color: var(--text-sec); font-size: 9px; margin-bottom: 2px; }
+        .log-act { font-weight: bold; color: var(--primary); }
+        .log-det { color: var(--text-main); }
     </style>
 </head>
 <body>
@@ -398,6 +405,14 @@
         <h3 style="color:var(--data-color); margin-bottom:10px;">Gestión de Datos</h3>
         
         <div class="card">
+            <h4 style="margin-top:0;">📜 Historial de Cambios</h4>
+            <p style="font-size:13px; color:var(--text-sec);">
+                Ver registro de los últimos movimientos realizados.
+            </p>
+            <button class="btn-history" onclick="openHistoryModal()">📜 Ver Historial de Cambios</button>
+        </div>
+
+        <div class="card">
             <h4 style="margin-top:0;">📤 Copia de Seguridad</h4>
             <p style="font-size:13px; color:var(--text-sec);">
                 Descarga un archivo JSON para mover los datos a otro celular.
@@ -417,7 +432,7 @@
         <div class="card">
             <h4 style="margin-top:0;">📊 Exportar a Excel</h4>
             <p style="font-size:13px; color:var(--text-sec);">
-                Genera un archivo .xlsx con pestañas organizadas (Empresas, Gastos, Sueldos) para ver en Excel.
+                Genera un archivo .xlsx con pestañas organizadas.
             </p>
             <button class="btn-excel" onclick="exportToExcel()">📊 Descargar EXCEL</button>
         </div>
@@ -485,11 +500,23 @@
     </div>
 </div>
 
+<div id="historyModal" class="modal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 style="margin:0; color:var(--primary);">Historial de Cambios</h2>
+            <button onclick="closeHistoryModal()" style="background:none; border:none; font-size:24px; color:var(--text-main);">&times;</button>
+        </div>
+        <p style="font-size:12px; color:var(--text-sec);">Últimos 50 movimientos registrados.</p>
+        <div id="historyList" style="max-height:60vh; overflow-y:auto;"></div>
+    </div>
+</div>
+
 <script>
     // --- DATOS (MISMAS LLAVES PARA NO PERDER DATOS) ---
     let companies = JSON.parse(localStorage.getItem('sys_companies_v5')) || {};
     let expenses = JSON.parse(localStorage.getItem('sys_expenses_v5')) || {};
     let salaries = JSON.parse(localStorage.getItem('sys_salaries_v2')) || {}; 
+    let changeLogs = JSON.parse(localStorage.getItem('sys_logs_v1')) || [];
     
     let currentCompany = null;
     let currentBankFilter = 'all';
@@ -497,6 +524,34 @@
 
     const fixedExpenseList = ["AMEX", "TARJ FRANCES", "FRANCES MASTER", "TARJ GALICIA", "TARJ ICBC", "TARJ HIPOTECARIO", "TARJ BANCO NACION", "SERV-LUZ", "GAS", "EXPENSAS", "NAFTA", "SUPERMERCADO", "MUNICIPAL", "ARBA CASA Y PATENTE", "IIGG YANINA", "IIGG MAURO", "MONOTRIBUTO", "COLEGIO LUCCA", "COLEGIO EMMA", "HONORARIOS", "TELEFONOS", "EXTRAS"];
     const expenseColors = ['rgba(255,255,255,0.8)', '#fef9c3', '#dcfce7', '#fee2e2']; 
+
+    // --- LOGGING SYSTEM ---
+    function logChange(action, detail) {
+        const now = new Date();
+        const ts = `${now.getDate()}/${now.getMonth()+1} ${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}`;
+        const log = { ts, action, detail };
+        changeLogs.unshift(log);
+        if(changeLogs.length > 50) changeLogs.pop();
+        localStorage.setItem('sys_logs_v1', JSON.stringify(changeLogs));
+    }
+
+    function openHistoryModal() {
+        const div = document.getElementById('historyList'); div.innerHTML = '';
+        if(changeLogs.length === 0) {
+            div.innerHTML = '<p style="text-align:center; color:#999;">No hay cambios registrados aún.</p>';
+        } else {
+            changeLogs.forEach(l => {
+                div.innerHTML += `
+                    <div class="log-row">
+                        <div class="log-ts">${l.ts}</div>
+                        <div><span class="log-act">${l.action}:</span> <span class="log-det">${l.detail}</span></div>
+                    </div>`;
+            });
+        }
+        document.getElementById('historyModal').style.display = 'flex';
+    }
+    function closeHistoryModal() { document.getElementById('historyModal').style.display = 'none'; }
+
 
     // --- TEMAS (Dark Mode) ---
     function initTheme() {
@@ -661,6 +716,7 @@
         if(!name) return;
         if(companies[name]) return alert('Ya existe');
         companies[name] = []; document.getElementById('newCompanyName').value = '';
+        logChange("Empresa", "Creada: " + name);
         saveAll(); renderCompanies(); populateCompanyFilter();
     }
 
@@ -701,8 +757,24 @@
         cancelEditMode(); 
     }
 
-    function renameCompany() { const newName = prompt("Nuevo nombre:", currentCompany); if(!newName || newName === currentCompany) return; if(companies[newName]) return alert("Ya existe"); companies[newName] = companies[currentCompany]; delete companies[currentCompany]; currentCompany = newName; document.getElementById('modalTitle').textContent = newName; saveAll(); renderCompanies(); populateCompanyFilter(); }
-    function deleteCompany() { if(!confirm("¿Borrar empresa?")) return; delete companies[currentCompany]; saveAll(); renderCompanies(); populateCompanyFilter(); closeModal(); }
+    function renameCompany() { 
+        const newName = prompt("Nuevo nombre:", currentCompany); 
+        if(!newName || newName === currentCompany) return; 
+        if(companies[newName]) return alert("Ya existe"); 
+        companies[newName] = companies[currentCompany]; 
+        delete companies[currentCompany]; 
+        logChange("Empresa", `Renombrada: ${currentCompany} -> ${newName}`);
+        currentCompany = newName; 
+        document.getElementById('modalTitle').textContent = newName; 
+        saveAll(); renderCompanies(); populateCompanyFilter(); 
+    }
+    
+    function deleteCompany() { 
+        if(!confirm("¿Borrar empresa?")) return; 
+        logChange("Empresa", "Borrada: " + currentCompany);
+        delete companies[currentCompany]; 
+        saveAll(); renderCompanies(); populateCompanyFilter(); closeModal(); 
+    }
 
     function toggleDateInput() {
         const chk = document.getElementById('checkPending'), inp = document.getElementById('datePay');
@@ -719,8 +791,18 @@
         if(!dPay && !editingEntryId) coll = undefined;
 
         const entry = { id: editingEntryId || Date.now(), type, bank, num, amount, dateBill: dBill, datePay: dPay, detail: det, amountCollected: coll };
-        if (editingEntryId) { const idx = companies[currentCompany].findIndex(e => e.id === editingEntryId); if(idx !== -1) companies[currentCompany][idx] = entry; } 
-        else { companies[currentCompany].push(entry); }
+        
+        if (editingEntryId) { 
+            const idx = companies[currentCompany].findIndex(e => e.id === editingEntryId); 
+            if(idx !== -1) {
+                companies[currentCompany][idx] = entry; 
+                logChange("Factura", `Editada en ${currentCompany} (${num})`);
+            }
+        } 
+        else { 
+            companies[currentCompany].push(entry); 
+            logChange("Factura", `Agregada en ${currentCompany}: ${formatMoney(amount)}`);
+        }
         saveAll(); cancelEditMode(); renderCompanyHistory();
     }
 
@@ -755,10 +837,18 @@
         const e = companies[comp].find(x => x.id === id); if(!e) return;
         const date = prompt("Fecha Cobro:", new Date().toISOString().split('T')[0]); if(!date) return;
         const raw = prompt("Monto Real:", e.amount); if(raw === null) return;
-        e.datePay = date; e.amountCollected = parseFloat(raw); saveAll(); refreshIncomeViews();
+        e.datePay = date; e.amountCollected = parseFloat(raw); 
+        logChange("Cobro", `${comp} (${e.num}): ${formatMoney(e.amountCollected)}`);
+        saveAll(); refreshIncomeViews();
     }
 
-    function delEntry(comp, id) { if(!confirm('¿Borrar?')) return; companies[comp] = companies[comp].filter(e => e.id !== id); saveAll(); refreshIncomeViews(); }
+    function delEntry(comp, id) { 
+        if(!confirm('¿Borrar?')) return; 
+        companies[comp] = companies[comp].filter(e => e.id !== id); 
+        logChange("Factura", `Eliminada en ${comp}`);
+        saveAll(); refreshIncomeViews(); 
+    }
+    
     function switchIncomeTab(tab) {
         document.querySelectorAll('#macro-income .view-section').forEach(e => e.style.display = 'none'); document.querySelectorAll('#macro-income .tab-btn').forEach(e => e.classList.remove('active'));
         document.getElementById('view-'+tab).style.display = 'block';
@@ -865,21 +955,31 @@
         const v = parseFloat(raw);
         let list = expenses[m], idx = list.findIndex(x=>x.name===n); 
         
+        let oldVal = (idx >= 0) ? list[idx].amount : 0;
+
         if(!isNaN(v) && v > 0) { 
-            if(idx>=0) list[idx].amount=v; else list.push({id:Date.now(), name:n, amount:v}); 
+            if(idx>=0) {
+                if(list[idx].amount !== v) {
+                    list[idx].amount=v;
+                    logChange("Gasto", `${n}: ${formatMoney(oldVal)} -> ${formatMoney(v)}`);
+                }
+            } else {
+                list.push({id:Date.now(), name:n, amount:v});
+                logChange("Gasto", `${n}: ${formatMoney(v)}`);
+            }
         } else if(idx>=0) {
             // SI BORRA EL MONTO:
-            // Si tenía color manual, solo ponemos monto a 0 (mantiene color manual)
-            // Si NO tenía color manual, borramos la entrada completa para que vuelva al estado "rojo automático"
             if(list[idx].color !== undefined) {
+                if(list[idx].amount !== 0) logChange("Gasto", `${n}: ${formatMoney(oldVal)} -> $0`);
                 list[idx].amount = 0;
             } else {
+                if(list[idx].amount !== 0) logChange("Gasto", `${n}: ${formatMoney(oldVal)} -> Borrado`);
                 list.splice(idx,1); 
             }
         }
         saveAll(); 
         updateExpenseTotalDisplay();
-        loadExpensesView(); // Recargar para actualizar colores auto
+        loadExpensesView(); 
     }
 
     function addToExpense(n) {
@@ -890,10 +990,13 @@
         if(addVal) {
             let cleanAdd = addVal.replace(',', '.');
             if(!isNaN(parseFloat(cleanAdd))) {
-                const newVal = currentVal + parseFloat(cleanAdd);
+                const added = parseFloat(cleanAdd);
+                const newVal = currentVal + added;
                 if(!expenses[m]) expenses[m] = [];
                 const idx = expenses[m].findIndex(x => x.name === n);
                 if(idx >= 0) expenses[m][idx].amount = newVal; else expenses[m].push({id:Date.now(), name:n, amount:newVal});
+                
+                logChange("Gasto Suma", `${n}: Sumado ${formatMoney(added)}`);
                 saveAll(); loadExpensesView();
             }
         }
@@ -904,23 +1007,18 @@
         if(!expenses[m]) expenses[m] = [];
         let idx = expenses[m].findIndex(x => x.name === n);
         
-        // Si no existe (estaba en rojo auto), lo creamos para asignarle color manual
         if(idx === -1) {
             expenses[m].push({id:Date.now(), name:n, amount:0, color:0});
             idx = expenses[m].length - 1;
         } else {
-            // Si ya existía pero no tenía color manual (estaba en verde auto), inicializamos
             if(expenses[m][idx].color === undefined) expenses[m][idx].color = 0;
         }
 
         const curColor = expenses[m][idx].color;
-        // Ciclo manual: Blanco -> Amarillo -> Verde -> Rojo -> Auto (borrar prop color)
         const nextColor = (curColor + 1);
         
         if(nextColor >= expenseColors.length) {
-            // Volver a automático (borrar propiedad color)
             delete expenses[m][idx].color;
-            // Si el monto es 0 y volvemos a auto, borrar la entrada completa para que sea rojo limpio
             if(expenses[m][idx].amount === 0) expenses[m].splice(idx,1);
         } else {
             expenses[m][idx].color = nextColor;
@@ -966,12 +1064,20 @@
         if(!n || isNaN(a)) return; 
         if(!expenses[m]) expenses[m]=[]; 
         expenses[m].push({id:Date.now(), name:n, amount:a}); 
+        logChange("Extra", `Agregado: ${n} (${formatMoney(a)})`);
         document.getElementById('extraName').value=''; 
         document.getElementById('extraAmount').value=''; 
         saveAll(); loadExpensesView(); 
     }
     
-    function delExpense(m, id) { if(confirm('¿Borrar?')) { expenses[m] = expenses[m].filter(e=>e.id!==id); saveAll(); loadExpensesView(); } }
+    function delExpense(m, id) { 
+        if(confirm('¿Borrar?')) { 
+            const e = expenses[m].find(x=>x.id===id);
+            if(e) logChange("Extra", `Borrado: ${e.name}`);
+            expenses[m] = expenses[m].filter(e=>e.id!==id); 
+            saveAll(); loadExpensesView(); 
+        } 
+    }
 
     // ==========================================
     // SECCIÓN 3: SUELDOS (Calculo Auto + Boton Sumar)
@@ -1004,7 +1110,16 @@
             </tr>`;
         }
     }
-    function saveSal(m, f, v) { if(!salaries[m]) salaries[m]={sueldo:0,pres:0}; salaries[m][f]=parseFloat(v)||0; saveAll(); loadSalaryView(); }
+    function saveSal(m, f, v) { 
+        if(!salaries[m]) salaries[m]={sueldo:0,pres:0}; 
+        const old = salaries[m][f];
+        const val = parseFloat(v)||0;
+        if(old !== val) {
+            salaries[m][f]=val; 
+            logChange("Sueldo", `Mes ${m} (${f}): ${formatMoney(val)}`);
+            saveAll(); loadSalaryView(); 
+        }
+    }
 
     function addToSalary(mKey, field) {
         if(!salaries[mKey]) salaries[mKey] = { sueldo:0, pres:0 };
@@ -1013,7 +1128,8 @@
         if (addVal) {
             let cleanAdd = addVal.replace(',', '.');
             if(!isNaN(parseFloat(cleanAdd))) {
-                const newVal = currentVal + parseFloat(cleanAdd);
+                const added = parseFloat(cleanAdd);
+                const newVal = currentVal + added;
                 saveSal(mKey, field, newVal);
             }
         }
@@ -1037,10 +1153,14 @@
         document.getElementById('sumM1').innerText = formatMoney(sm1); document.getElementById('sumM2').innerText = formatMoney(sm2); document.getElementById('sumMT').innerText = formatMoney(sm1+sm2);
         document.getElementById('sumG1').innerText = formatMoney(sy1+sm1); document.getElementById('sumG2').innerText = formatMoney(sy2+sm2); document.getElementById('sumGT').innerText = formatMoney(sy1+sm1+sy2+sm2);
     }
-    function saveAfip(m, f, v) { if(!salaries[m]) salaries[m]={sueldo:0,pres:0}; salaries[m][f]=v; saveAll(); }
+    function saveAfip(m, f, v) { 
+        if(!salaries[m]) salaries[m]={sueldo:0,pres:0}; 
+        salaries[m][f]=v; 
+        saveAll(); 
+    }
 
-    function exportData() { const b = new Blob([JSON.stringify({companies,expenses,salaries})], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'backup.json'; a.click(); }
-    function importData() { const f = document.getElementById('importFile').files[0]; const r = new FileReader(); r.onload = (e) => { const d = JSON.parse(e.target.result); companies=d.companies; expenses=d.expenses; salaries=d.salaries; saveAll(); location.reload(); }; r.readAsText(f); }
+    function exportData() { const b = new Blob([JSON.stringify({companies,expenses,salaries,changeLogs})], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'backup.json'; a.click(); }
+    function importData() { const f = document.getElementById('importFile').files[0]; const r = new FileReader(); r.onload = (e) => { const d = JSON.parse(e.target.result); companies=d.companies; expenses=d.expenses; salaries=d.salaries; changeLogs=d.changeLogs||[]; saveAll(); location.reload(); }; r.readAsText(f); }
     
     // --- BORRAR TODO ---
     function eraseAllData() {
@@ -1073,6 +1193,9 @@
         // Lógica de cierre seguro
         if (e.target == document.getElementById('companyModal')) {
             tryCloseModal();
+        }
+        if (e.target == document.getElementById('historyModal')) {
+            closeHistoryModal();
         }
     }
 </script>
