@@ -3,40 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistema de Gestión V32</title>
+    <title>Sistema de Gestión</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
         /* --- ESTILOS VISUALES --- */
         :root {
+            /* MODO CLARO (Default) */
             --primary: #2563eb;       
             --expense-color: #be123c; 
             --salary-color: #059669;  
             --tax-color: #7c3aed;     
             --data-color: #475569;    
-            --galicia: #ea580c;       
-            --frances: #0f172a;       
             --bg: #f1f5f9;
             --white: #ffffff;
+            --text-main: #0f172a;
+            --text-sec: #64748b;
             --border: #cbd5e1;
+            --input-bg: #ffffff;
+            --card-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* MODO OSCURO */
+        [data-theme="dark"] {
+            --primary: #3b82f6;       
+            --expense-color: #f43f5e; 
+            --salary-color: #10b981;  
+            --tax-color: #a78bfa;     
+            --data-color: #94a3b8;    
+            --bg: #0f172a;            
+            --white: #1e293b;         
+            --text-main: #f1f5f9;     
+            --text-sec: #94a3b8;      
+            --border: #334155;        
+            --input-bg: #334155;      
+            --card-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
 
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background: var(--bg); margin: 0; padding: 10px; color: #0f172a; 
-            -webkit-tap-highlight-color: transparent; padding-bottom: 80px;
+            background: var(--bg); margin: 0; padding: 10px; color: var(--text-main); 
+            -webkit-tap-highlight-color: transparent; padding-bottom: 80px; transition: background 0.3s, color 0.3s;
         }
         
         .container { max-width: 1000px; margin: 0 auto; }
 
+        /* HEADER SUPERIOR */
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .theme-toggle { background: none; border: none; font-size: 24px; cursor: pointer; padding: 5px; border-radius: 50%; transition: 0.2s; }
+        .theme-toggle:active { transform: scale(0.9); background: rgba(0,0,0,0.1); }
+        [data-theme="dark"] .theme-toggle { filter: invert(1); }
+
         /* --- NAVEGACIÓN --- */
         .main-nav {
-            display: flex; gap: 5px; background: #fff; padding: 5px;
-            border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            display: flex; gap: 5px; background: var(--white); padding: 5px;
+            border-radius: 12px; box-shadow: var(--card-shadow);
             margin-bottom: 15px; position: sticky; top: 0; z-index: 100; flex-wrap: wrap;
+            border: 1px solid var(--border);
         }
         .main-nav button {
             flex: 1; padding: 10px 5px; border: none; background: transparent;
             font-size: 10px; font-weight: 800; cursor: pointer;
-            border-radius: 8px; color: #94a3b8; transition: 0.2s;
+            border-radius: 8px; color: var(--text-sec); transition: 0.2s;
             text-transform: uppercase; min-width: 60px;
         }
         .main-nav button.active-income { background: var(--primary); color: white; }
@@ -52,17 +79,22 @@
         .view-section.active { display: block; animation: fadeIn 0.3s; }
 
         /* --- UI COMPONENTES --- */
-        .card { background: var(--white); padding: 15px; border-radius: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 15px; border: 1px solid var(--border); }
+        .card { background: var(--white); padding: 15px; border-radius: 16px; box-shadow: var(--card-shadow); margin-bottom: 15px; border: 1px solid var(--border); transition: background 0.3s; }
         
-        .tabs { display: flex; gap: 5px; background: #e2e8f0; padding: 4px; border-radius: 10px; overflow-x: auto; margin-bottom: 15px; }
+        h3, h4, h5 { color: var(--text-main); }
+
+        .tabs { display: flex; gap: 5px; background: var(--border); padding: 4px; border-radius: 10px; overflow-x: auto; margin-bottom: 15px; }
         .tab-btn {
             flex: 1; padding: 10px; border: none; background: transparent; cursor: pointer;
-            border-radius: 8px; font-weight: 600; color: #64748b; font-size: 12px; min-width: 80px; text-align: center;
+            border-radius: 8px; font-weight: 600; color: var(--text-sec); font-size: 12px; min-width: 80px; text-align: center;
         }
-        .tab-btn.active { background: var(--white); color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .tab-btn.active { background: var(--bg); color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
         /* INPUTS GENERICOS */
-        input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 16px; box-sizing: border-box; background: #fff; margin-bottom: 8px; }
+        input, select { 
+            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); 
+            font-size: 16px; box-sizing: border-box; background: var(--input-bg); color: var(--text-main); margin-bottom: 8px; 
+        }
         input:focus { outline: 2px solid var(--primary); border-color: transparent; }
 
         /* INPUTS SUELDOS */
@@ -72,7 +104,7 @@
             color: #064e3b !important; background: #ecfdf5 !important; border: 1px solid #a7f3d0 !important;
             border-radius: 5px; text-align: right; margin: 0 !important;
         }
-        .salary-input:focus { background: #fff !important; border-color: #059669 !important; }
+        [data-theme="dark"] .salary-input { background: #064e3b !important; color: #ecfdf5 !important; border-color: #059669 !important; }
 
         /* BOTON SUMAR SUELDO */
         .btn-add-salary {
@@ -81,6 +113,7 @@
             display: flex; align-items: center; justify-content: center; font-size: 14px;
         }
         .btn-add-salary:active { background: #6ee7b7; }
+        [data-theme="dark"] .btn-add-salary { background: #065f46; color: #d1fae5; border-color: #059669; }
 
         /* INPUTS ARCA */
         .arca-input {
@@ -89,78 +122,60 @@
             border: 1px solid #d8b4fe !important; border-radius: 5px; margin: 0 !important;
             color: #581c87; font-weight: 600;
         }
-        .arca-input:focus { background: #fff !important; border-color: #7c3aed !important; }
+        [data-theme="dark"] .arca-input { background: #4c1d95 !important; color: #e9d5ff !important; border-color: #7c3aed !important; }
 
         /* INPUTS GASTOS */
         .fix-expense-input { margin: 0 !important; text-align: right; font-weight: bold; color: #334155; font-size: 14px; transition: background 0.3s; background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.1); }
-        .expense-item-div { padding: 8px; border-radius: 8px; transition: 0.3s; position: relative; border: 1px solid #e2e8f0; }
+        [data-theme="dark"] .fix-expense-input { color: #0f172a; } /* Texto oscuro para que se lea sobre los colores pastel */
+        
+        .expense-item-div { padding: 8px; border-radius: 8px; transition: 0.3s; position: relative; border: 1px solid var(--border); }
         
         /* BOTONES GASTO (SUMAR Y COLOR) */
         .expense-tools { display: flex; gap: 5px; }
         .btn-tool {
-            background: rgba(255,255,255,0.7); color: #475569; border: 1px solid #cbd5e1; border-radius: 4px;
+            background: rgba(255,255,255,0.7); color: #475569; border: 1px solid rgba(0,0,0,0.2); border-radius: 4px;
             width: 22px; height: 22px; font-size: 12px; font-weight: bold; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
         }
-        .btn-tool:active { background: #cbd5e1; }
 
         /* BOTONES */
         .btn-primary { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; }
         .btn-data { background: var(--data-color); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; }
+        .btn-excel { background: #15803d; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; margin-bottom: 10px; }
+        
         .btn-sm { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; border: none; cursor: pointer; }
         .btn-success { background: #16a34a; color: white; }
         .btn-danger { background: #fee2e2; color: #dc2626; }
         .btn-edit { background: #fef08a; color: #854d0e; border: 1px solid #fde047; }
         
-        /* TOAST NOTIFICATION MEJORADO */
+        /* TOAST NOTIFICATION */
         #toast {
-            visibility: hidden; 
-            min-width: 180px; 
-            background-color: #16a34a; /* Verde éxito */
-            color: #fff; 
-            text-align: center; 
-            border-radius: 50px; 
-            padding: 12px 20px;
-            position: fixed; 
-            z-index: 9999; /* Por encima de TODO */
-            left: 50%; 
-            bottom: 30px;
-            transform: translateX(-50%); /* Centrado perfecto */
-            font-size: 14px; 
-            font-weight: 800; 
-            box-shadow: 0 4px 15px rgba(22, 163, 74, 0.4);
+            visibility: hidden; min-width: 180px; background-color: #16a34a; color: #fff; 
+            text-align: center; border-radius: 50px; padding: 12px 20px;
+            position: fixed; z-index: 9999; left: 50%; bottom: 30px; transform: translateX(-50%);
+            font-size: 14px; font-weight: 800; box-shadow: 0 4px 15px rgba(22, 163, 74, 0.4);
             display: flex; align-items: center; justify-content: center; gap: 8px;
-            opacity: 0; 
-            transition: opacity 0.3s, bottom 0.3s;
+            opacity: 0; transition: opacity 0.3s, bottom 0.3s;
         }
         #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
-
-        /* BOTONES DE GESTIÓN EMPRESA */
-        .company-actions { display: flex; gap: 10px; margin-bottom: 10px; }
-        .btn-action-outline { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #475569; font-size: 11px; font-weight: bold; cursor: pointer; }
-
-        /* FILTROS DE BANCO */
-        .bank-filters { display: flex; gap: 5px; margin-bottom: 10px; }
-        .bank-filter-btn { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: white; font-size: 11px; font-weight: bold; cursor: pointer; }
-        .bank-filter-btn.active { background: #334155; color: white; border-color: #334155; }
 
         /* LISTAS */
         .companies-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
         .company-btn {
-            background: var(--white); border: 2px solid var(--border); color: #334155;
+            background: var(--white); border: 2px solid var(--border); color: var(--text-main);
             padding: 15px; border-radius: 12px; cursor: pointer; font-weight: 700; text-align: center;
             display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80px;
         }
         
         /* TABLAS */
         .table-wrapper { overflow-x: auto; margin-top: 5px; }
-        table { width: 100%; border-collapse: collapse; min-width: 100%; }
+        table { width: 100%; border-collapse: collapse; min-width: 100%; color: var(--text-main); }
         th, td { padding: 8px 5px; text-align: left; border-bottom: 1px solid var(--border); font-size: 12px; vertical-align: middle; }
-        th { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 700; background: #f8fafc; }
+        th { font-size: 10px; text-transform: uppercase; color: var(--text-sec); font-weight: 700; background: var(--bg); }
         
         /* TAGS */
         .tag { font-size: 9px; padding: 2px 4px; border-radius: 4px; color: white; font-weight: bold; text-transform: uppercase; margin-right: 2px; display: inline-block; }
-        .bg-mau { background: #3b82f6; } .bg-yan { background: #ec4899; } .bg-qua { background: #6366f1; } .bg-gal { background: var(--galicia); } .bg-fra { background: var(--frances); }
+        .bg-mau { background: #3b82f6; } .bg-yan { background: #ec4899; } .bg-qua { background: #6366f1; } .bg-gal { background: var(--galicia); } .bg-fra { background: #334155; }
         
         /* TOTALES */
         .total-box { padding: 15px; border-radius: 12px; text-align: center; color: white; margin-bottom: 15px; }
@@ -170,14 +185,14 @@
 
         /* RESUMEN DE INGRESOS */
         .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-bottom: 15px; }
-        .summary-card { background: white; padding: 10px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
-        .summary-card h4 { margin: 0 0 10px 0; color: var(--tax-color); text-transform: uppercase; font-size: 11px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
-        .summary-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #64748b; }
-        .summary-row.total { font-weight: bold; color: #0f172a; font-size: 13px; margin-top: 8px; border-top: 1px dashed #e2e8f0; padding-top: 5px; }
+        .summary-card { background: var(--white); padding: 10px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
+        .summary-card h4 { margin: 0 0 10px 0; color: var(--tax-color); text-transform: uppercase; font-size: 11px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+        .summary-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: var(--text-sec); }
+        .summary-row.total { font-weight: bold; color: var(--text-main); font-size: 13px; margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 5px; }
 
         /* MODAL */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: flex-end; justify-content: center; backdrop-filter: blur(2px); }
-        .modal-content { background: white; width: 100%; max-width: 600px; border-radius: 20px 20px 0 0; padding: 20px; max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: var(--white); width: 100%; max-width: 600px; border-radius: 20px 20px 0 0; padding: 20px; max-height: 90vh; overflow-y: auto; color: var(--text-main); }
         @media(min-width: 600px) { .modal { align-items: center; } .modal-content { border-radius: 16px; width: 90%; } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -186,6 +201,11 @@
 
 <div class="container">
     
+    <div class="top-header">
+        <div style="font-weight:bold; font-size:18px;">Sistema de Gestión</div>
+        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+    </div>
+
     <nav class="main-nav">
         <button id="nav-income" class="active-income" onclick="showMacroSection('income')">🏢 Empresas</button>
         <button id="nav-expense" onclick="showMacroSection('expense')">💸 Gastos</button>
@@ -247,7 +267,7 @@
 
         <div id="view-filter" class="view-section">
             <div class="card">
-                <h3 style="margin:0 0 10px 0; font-size:14px; color:#64748b;">Ficha Anual por Empresa:</h3>
+                <h3 style="margin:0 0 10px 0; font-size:14px; color:var(--text-sec);">Ficha Anual por Empresa:</h3>
                 <select id="companyFilterSelect" onchange="loadCompanySpecificStats()">
                     <option value="">-- Seleccionar --</option>
                 </select>
@@ -274,15 +294,15 @@
                 <input type="month" id="expenseMonth" onchange="loadExpensesView()" style="width:auto; margin:0;">
             </div>
             <div id="fixedExpensesGrid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px;"></div>
-            <p style="text-align:center; font-size:11px; color:#64748b; margin-top:0;">* Automático: Rojo (vacío) / Verde (cargado). Manual: 🎨.</p>
-            <hr style="margin: 20px 0; border:0; border-top:1px dashed #ccc;">
-            <div style="background:#f1f5f9; padding:10px; border-radius:8px;">
-                <h4 style="margin:0 0 10px 0; font-size:12px; color:#64748b;">Gasto Extra</h4>
+            <p style="text-align:center; font-size:11px; color:var(--text-sec); margin-top:0;">* Automático: Rojo (vacío) / Verde (cargado). Manual: 🎨.</p>
+            <hr style="margin: 20px 0; border:0; border-top:1px dashed var(--border);">
+            <div style="background:var(--bg); padding:10px; border-radius:8px; border:1px solid var(--border);">
+                <h4 style="margin:0 0 10px 0; font-size:12px; color:var(--text-sec);">Gasto Extra</h4>
                 <div style="display:flex; gap:5px;">
                     <input type="text" id="extraName" placeholder="Ej: Farmacia" style="margin:0;">
                     <input type="text" inputmode="decimal" id="extraAmount" placeholder="$" style="width:80px; margin:0;" onfocus="cleanInput(this)" onblur="fmtInput(this)">
                 </div>
-                <button class="btn-sm" style="background:#64748b; color:white; width:100%; margin-top:5px;" onclick="addExtraExpense()">+ Agregar</button>
+                <button class="btn-sm" style="background:var(--data-color); color:white; width:100%; margin-top:5px;" onclick="addExtraExpense()">+ Agregar</button>
             </div>
         </div>
         <div id="expensesResults"></div>
@@ -318,7 +338,7 @@
                 </table>
             </div>
         </div>
-        <p style="text-align:center; font-size:11px; color:#64748b;">* Mauro se calcula sumando los cobros de Empresas.</p>
+        <p style="text-align:center; font-size:11px; color:var(--text-sec);">* Mauro se calcula sumando los cobros de Empresas.</p>
     </div>
 
     <div id="macro-tax" class="macro-section">
@@ -347,7 +367,7 @@
                 <div class="summary-row"><span>2° Sem:</span> <span id="sumM2">-</span></div>
                 <div class="summary-row total"><span>Anual:</span> <span id="sumMT">-</span></div>
             </div>
-            <div class="summary-card" style="border-color: #2563eb; background:#eff6ff;">
+            <div class="summary-card" style="border-color: #2563eb; background:var(--bg);">
                 <h4 style="color:#2563eb;">🌎 TOTAL GENERAL</h4>
                 <div class="summary-row"><span>1° Sem:</span> <span id="sumG1" style="font-weight:bold;">-</span></div>
                 <div class="summary-row"><span>2° Sem:</span> <span id="sumG2" style="font-weight:bold;">-</span></div>
@@ -371,37 +391,41 @@
                 </table>
             </div>
         </div>
-        <p style="text-align:center; font-size:11px; color:#64748b;">* Los montos son la Suma de Facturación por Fecha de Emisión.</p>
+        <p style="text-align:center; font-size:11px; color:var(--text-sec);">* Los montos son la Suma de Facturación por Fecha de Emisión.</p>
     </div>
 
     <div id="macro-data" class="macro-section">
         <h3 style="color:var(--data-color); margin-bottom:10px;">Gestión de Datos</h3>
         
         <div class="card">
-            <h4 style="margin-top:0;">📤 Pasar datos a otro dispositivo</h4>
-            <p style="font-size:13px; color:#64748b;">
-                1. Hacé clic en <b>"Descargar Copia"</b>.<br>
-                2. Se bajará un archivo <code>datos_sistema.json</code>.<br>
-                3. Enviá ese archivo por WhatsApp o Email a tu otro dispositivo (celular/PC).
+            <h4 style="margin-top:0;">📤 Copia de Seguridad</h4>
+            <p style="font-size:13px; color:var(--text-sec);">
+                Descarga un archivo JSON para mover los datos a otro celular.
             </p>
             <button class="btn-data" onclick="exportData()">⬇️ Descargar Copia</button>
         </div>
 
         <div class="card">
-            <h4 style="margin-top:0;">📥 Cargar datos desde archivo</h4>
-            <p style="font-size:13px; color:#64748b;">
-                1. Abrí esta App en el otro dispositivo.<br>
-                2. Seleccioná el archivo que te enviaste.<br>
-                3. Hacé clic en <b>"Restaurar"</b> para cargar toda la información.
+            <h4 style="margin-top:0;">📥 Restaurar Copia</h4>
+            <p style="font-size:13px; color:var(--text-sec);">
+                Carga un archivo JSON previamente guardado.
             </p>
             <input type="file" id="importFile" accept=".json" style="margin-bottom:10px;">
             <button class="btn-primary" onclick="importData()">⬆️ Restaurar Copia</button>
         </div>
+        
+        <div class="card">
+            <h4 style="margin-top:0;">📊 Exportar a Excel</h4>
+            <p style="font-size:13px; color:var(--text-sec);">
+                Genera un archivo .xlsx con pestañas organizadas (Empresas, Gastos, Sueldos) para ver en Excel.
+            </p>
+            <button class="btn-excel" onclick="exportToExcel()">📊 Descargar EXCEL</button>
+        </div>
 
-        <div class="card" style="border: 1px solid #ef4444; background:#fef2f2;">
+        <div class="card" style="border: 1px solid #ef4444; background:var(--bg);">
             <h4 style="margin-top:0; color:#dc2626;">⚠️ ZONA DE PELIGRO</h4>
             <p style="font-size:13px; color:#b91c1c;">
-                Esto borrará <b>TODA</b> la información cargada en este dispositivo (Empresas, Gastos, Sueldos). No se puede deshacer.
+                Esto borrará <b>TODA</b> la información. No se puede deshacer.
             </p>
             <button class="btn-danger" onclick="eraseAllData()">🗑️ BORRAR TODO EL SISTEMA</button>
         </div>
@@ -409,19 +433,19 @@
 
 </div>
 
-<div id="toast">💾 Guardado Exitosamente</div>
+<div id="toast">💾 Guardado</div>
 
 <div id="companyModal" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <h2 id="modalTitle" style="margin:0; color:var(--primary);">Empresa</h2>
-            <button onclick="tryCloseModal()" style="background:none; border:none; font-size:24px;">&times;</button>
+            <button onclick="tryCloseModal()" style="background:none; border:none; font-size:24px; color:var(--text-main);">&times;</button>
         </div>
         <div class="company-actions">
             <button class="btn-action-outline" onclick="renameCompany()">✏️ Renombrar</button>
             <button class="btn-action-outline" onclick="deleteCompany()" style="color:#ef4444; border-color:#fecaca;">🗑️ Eliminar</button>
         </div>
-        <div class="card" id="entryFormCard" style="background: #f8fafc; padding:15px; border:1px solid #cbd5e1; box-shadow:none;">
+        <div class="card" id="entryFormCard" style="background: var(--bg); padding:15px; border:1px solid var(--border); box-shadow:none;">
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                 <select id="entryType">
                     <option value="fac_mauro">👤 Fac. Mauro</option>
@@ -439,16 +463,16 @@
             </div>
             <input type="text" id="entryDetail" placeholder="Detalle (Opcional)">
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <div><label style="font-size:10px; font-weight:bold;">EMISIÓN</label><input type="date" id="dateBill"></div>
-                <div><label style="font-size:10px; font-weight:bold;">COBRO</label><input type="date" id="datePay"></div>
+                <div><label style="font-size:10px; font-weight:bold; color:var(--text-sec);">EMISIÓN</label><input type="date" id="dateBill"></div>
+                <div><label style="font-size:10px; font-weight:bold; color:var(--text-sec);">COBRO</label><input type="date" id="datePay"></div>
             </div>
-            <div style="display:flex; align-items:center; gap:10px; margin-top:5px; background:#fff7ed; padding:8px; border-radius:6px; border:1px solid #ffedd5;">
+            <div style="display:flex; align-items:center; gap:10px; margin-top:5px; background:rgba(255,237,213,0.5); padding:8px; border-radius:6px; border:1px solid #ffedd5;">
                 <input type="checkbox" id="checkPending" onchange="toggleDateInput()" style="width:20px; margin:0;">
                 <label for="checkPending" style="font-size:12px; font-weight:bold; color:#c2410c;">PENDIENTE (No cobrado)</label>
             </div>
             <div style="display:flex; gap:5px; margin-top:15px;">
                 <button id="btnSaveEntry" class="btn-primary" onclick="saveCompanyEntry()">Guardar</button>
-                <button id="btnCancelEdit" class="btn-sm" style="display:none; background:#94a3b8; color:white; width:auto;" onclick="cancelEditMode()">Cancelar</button>
+                <button id="btnCancelEdit" class="btn-sm" style="display:none; background:var(--data-color); color:white; width:auto;" onclick="cancelEditMode()">Cancelar</button>
             </div>
         </div>
         <h3>Historial</h3>
@@ -472,7 +496,87 @@
     let editingEntryId = null; 
 
     const fixedExpenseList = ["AMEX", "TARJ FRANCES", "FRANCES MASTER", "TARJ GALICIA", "TARJ ICBC", "TARJ HIPOTECARIO", "TARJ BANCO NACION", "SERV-LUZ", "GAS", "EXPENSAS", "NAFTA", "SUPERMERCADO", "MUNICIPAL", "ARBA CASA Y PATENTE", "IIGG YANINA", "IIGG MAURO", "MONOTRIBUTO", "COLEGIO LUCCA", "COLEGIO EMMA", "HONORARIOS", "TELEFONOS", "EXTRAS"];
-    const expenseColors = ['#f8fafc', '#fef9c3', '#dcfce7', '#fee2e2']; // 0:Def, 1:Yel, 2:Grn, 3:Red
+    const expenseColors = ['rgba(255,255,255,0.8)', '#fef9c3', '#dcfce7', '#fee2e2']; 
+
+    // --- TEMAS (Dark Mode) ---
+    function initTheme() {
+        const saved = localStorage.getItem('sys_theme') || 'light';
+        document.body.setAttribute('data-theme', saved);
+        document.getElementById('themeBtn').textContent = saved === 'light' ? '🌙' : '☀️';
+    }
+
+    function toggleTheme() {
+        const current = document.body.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', next);
+        localStorage.setItem('sys_theme', next);
+        document.getElementById('themeBtn').textContent = next === 'light' ? '🌙' : '☀️';
+    }
+
+    // --- EXPORTAR EXCEL (SheetJS) ---
+    function exportToExcel() {
+        try {
+            const wb = XLSX.utils.book_new();
+
+            // 1. DATA EMPRESAS (Flatten)
+            let companiesData = [];
+            Object.keys(companies).sort().forEach(comp => {
+                companies[comp].forEach(e => {
+                    companiesData.push({
+                        Empresa: comp,
+                        Tipo: e.type,
+                        Banco: e.bank,
+                        Factura: e.num,
+                        Monto_Facturado: e.amount,
+                        Fecha_Emision: e.dateBill,
+                        Fecha_Cobro: e.datePay,
+                        Monto_Cobrado: e.amountCollected || e.amount,
+                        Detalle: e.detail || ''
+                    });
+                });
+            });
+            const wsComp = XLSX.utils.json_to_sheet(companiesData);
+            XLSX.utils.book_append_sheet(wb, wsComp, "Empresas");
+
+            // 2. DATA GASTOS
+            let expData = [];
+            Object.keys(expenses).sort().forEach(month => {
+                expenses[month].forEach(e => {
+                    expData.push({
+                        Mes: month,
+                        Concepto: e.name,
+                        Monto: e.amount,
+                        Es_Extra: !fixedExpenseList.includes(e.name) ? "SI" : "NO"
+                    });
+                });
+            });
+            const wsExp = XLSX.utils.json_to_sheet(expData);
+            XLSX.utils.book_append_sheet(wb, wsExp, "Gastos");
+
+            // 3. DATA SUELDOS
+            let salData = [];
+            Object.keys(salaries).sort().forEach(month => {
+                const s = salaries[month];
+                salData.push({
+                    Mes: month,
+                    Sueldo_Base: s.sueldo || 0,
+                    Presentismo: s.pres || 0,
+                    Total_Yani: (s.sueldo||0) + (s.pres||0),
+                    AFIP_Yani: s.afip_yani || '',
+                    AFIP_Mauro: s.afip_mauro || ''
+                });
+            });
+            const wsSal = XLSX.utils.json_to_sheet(salData);
+            XLSX.utils.book_append_sheet(wb, wsSal, "Sueldos");
+
+            // DESCARGAR
+            XLSX.writeFile(wb, "Reporte_Financiero.xlsx");
+            showToast();
+
+        } catch (error) {
+            alert("Error al crear Excel: " + error);
+        }
+    }
 
     // --- UTILS ---
     const formatMoney = (val) => '$ ' + (val || 0).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -512,7 +616,7 @@
         localStorage.setItem('sys_companies_v5', JSON.stringify(companies));
         localStorage.setItem('sys_expenses_v5', JSON.stringify(expenses));
         localStorage.setItem('sys_salaries_v2', JSON.stringify(salaries));
-        showToast(); // Feedback visual
+        showToast(); 
     }
 
     // --- CALCULO AUTOMATICO PARA MAURO ---
@@ -602,7 +706,7 @@
 
     function toggleDateInput() {
         const chk = document.getElementById('checkPending'), inp = document.getElementById('datePay');
-        inp.disabled = chk.checked; inp.style.background = chk.checked ? '#e2e8f0' : '#fff';
+        inp.disabled = chk.checked; inp.style.background = chk.checked ? 'rgba(0,0,0,0.1)' : 'var(--input-bg)';
         if(chk.checked) inp.value = ''; else if(!editingEntryId) inp.value = new Date().toISOString().split('T')[0];
     }
 
@@ -633,7 +737,7 @@
 
     function cancelEditMode() {
         editingEntryId = null; document.getElementById('invNum').value = ''; document.getElementById('amount').value = ''; document.getElementById('entryDetail').value = ''; document.getElementById('dateBill').value = new Date().toISOString().split('T')[0]; document.getElementById('datePay').value = new Date().toISOString().split('T')[0]; document.getElementById('checkPending').checked = false; toggleDateInput();
-        document.getElementById('btnSaveEntry').textContent = "Guardar"; document.getElementById('btnSaveEntry').style.background = "var(--primary)"; document.getElementById('entryFormCard').style.background = "#f8fafc"; document.getElementById('btnCancelEdit').style.display = 'none';
+        document.getElementById('btnSaveEntry').textContent = "Guardar"; document.getElementById('btnSaveEntry').style.background = "var(--primary)"; document.getElementById('entryFormCard').style.background = "var(--bg)"; document.getElementById('btnCancelEdit').style.display = 'none';
     }
 
     function renderCompanyHistory() {
@@ -643,7 +747,7 @@
             let amDisp = `<b>${formatMoney(e.amount)}</b>`;
             if(e.amountCollected && e.amountCollected !== e.amount) amDisp += `<br><span style="font-size:10px; color:green;">Cob: ${formatMoney(e.amountCollected)}</span>`;
             const btnPay = isPend ? `<button class="btn-sm btn-success" onclick="markPaid('${currentCompany}',${e.id})">$</button>` : '';
-            tbody.innerHTML += `<tr><td>${getTypeTag(e.type)} ${getBankTag(e.bank)} <b>${e.num}</b> ${e.detail ? `<span style="font-size:11px; font-style:italic; color:#666; display:block;">${e.detail}</span>` : ''}</td><td>E:${formatDate(e.dateBill)}<br>C:${formatDate(e.datePay)}</td><td>${amDisp}</td><td align="right" style="white-space:nowrap;">${btnPay}<button class="btn-sm btn-edit" onclick="editEntry(${e.id})">✏️</button><button class="btn-sm btn-danger" onclick="delEntry('${currentCompany}',${e.id})">×</button></td></tr>`;
+            tbody.innerHTML += `<tr><td>${getTypeTag(e.type)} ${getBankTag(e.bank)} <b>${e.num}</b> ${e.detail ? `<span style="font-size:11px; font-style:italic; opacity:0.8; display:block;">${e.detail}</span>` : ''}</td><td>E:${formatDate(e.dateBill)}<br>C:${formatDate(e.datePay)}</td><td>${amDisp}</td><td align="right" style="white-space:nowrap;">${btnPay}<button class="btn-sm btn-edit" onclick="editEntry(${e.id})">✏️</button><button class="btn-sm btn-danger" onclick="delEntry('${currentCompany}',${e.id})">×</button></td></tr>`;
         });
     }
 
@@ -949,7 +1053,7 @@
         }
     }
 
-    // --- AUTO FECHAS AL DIA ---
+    // --- AUTO FECHAS AL DIA Y TEMA ---
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.toISOString().slice(0, 7);
@@ -962,7 +1066,8 @@
     document.getElementById('taxYear').value = currentYear;
     document.getElementById('filterYear').value = currentYear;
 
-    // Ejecutar
+    // Ejecutar inicio
+    initTheme();
     renderCompanies();
     window.onclick = (e) => { 
         // Lógica de cierre seguro
