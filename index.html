@@ -217,21 +217,29 @@
             
             /* 1. ARREGLO INGRESOS: Una tarjeta debajo de otra */
             .summary-grid {
-                grid-template-columns: 1fr !important; /* Forza a ocupar todo el ancho */
+                grid-template-columns: 1fr !important;
             }
 
-            /* 2. ARREGLO FECHAS EMPRESAS: Una fecha debajo de otra */
+            /* 2. ARREGLO ARCA: Inputs más grandes en celular */
+            .arca-input {
+                min-width: 70px !important;
+                font-size: 14px !important;
+                padding: 8px !important;
+            }
+
+            /* 3. ARREGLO FECHAS MODAL: Side-by-side pero compactas */
             .date-grid-responsive {
-                grid-template-columns: 1fr !important; /* Stack vertical */
+                grid-template-columns: 1fr 1fr !important;
+                gap: 8px !important;
+            }
+            #dateBill, #datePay {
+                padding: 6px !important; /* Más compactos en altura */
+                font-size: 13px !important; /* Letra ajustada */
             }
 
-            /* Extra: Agrandar un poco el texto de resumen para leer mejor los nros */
-            .summary-row span {
-                font-size: 13px;
-            }
-            .summary-row.total span {
-                font-size: 16px;
-            }
+            /* Extra: Agrandar texto resumen */
+            .summary-row span { font-size: 13px; }
+            .summary-row.total span { font-size: 16px; }
         }
     </style>
 </head>
