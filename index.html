@@ -532,7 +532,11 @@
         const log = { ts, action, detail };
         changeLogs.unshift(log);
         if(changeLogs.length > 50) changeLogs.pop();
-        localStorage.setItem('sys_logs_v1', JSON.stringify(changeLogs));
+        try {
+            localStorage.setItem('sys_logs_v1', JSON.stringify(changeLogs));
+        } catch(e) {
+            console.error("Storage full");
+        }
     }
 
     function openHistoryModal() {
@@ -624,6 +628,10 @@
             const wsSal = XLSX.utils.json_to_sheet(salData);
             XLSX.utils.book_append_sheet(wb, wsSal, "Sueldos");
 
+            // 4. HISTORIAL
+            const wsHist = XLSX.utils.json_to_sheet(changeLogs);
+            XLSX.utils.book_append_sheet(wb, wsHist, "Historial");
+
             // DESCARGAR
             XLSX.writeFile(wb, "Reporte_Financiero.xlsx");
             showToast();
@@ -634,6 +642,7 @@
     }
 
     // --- UTILS ---
+    const roundToTwo = (num) => Math.round((num + Number.EPSILON) * 100) / 100;
     const formatMoney = (val) => '$ ' + (val || 0).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     const formatDate = (s) => { if(!s) return '-'; const [y,m,d]=s.split('-'); return `${d}/${m}`; };
     const getBankTag = (bank) => bank === 'galicia' ? '<span class="tag bg-gal">GAL</span>' : '<span class="tag bg-fra">FRA</span>';
@@ -668,10 +677,14 @@
     }
 
     function saveAll() {
-        localStorage.setItem('sys_companies_v5', JSON.stringify(companies));
-        localStorage.setItem('sys_expenses_v5', JSON.stringify(expenses));
-        localStorage.setItem('sys_salaries_v2', JSON.stringify(salaries));
-        showToast(); 
+        try {
+            localStorage.setItem('sys_companies_v5', JSON.stringify(companies));
+            localStorage.setItem('sys_expenses_v5', JSON.stringify(expenses));
+            localStorage.setItem('sys_salaries_v2', JSON.stringify(salaries));
+            showToast();
+        } catch (e) {
+            alert("⚠️ MEMORIA LLENA: No se pueden guardar más cambios. Borra datos antiguos o exporta una copia.");
+        }
     }
 
     // --- CALCULO AUTOMATICO PARA MAURO ---
@@ -684,7 +697,7 @@
                 }
             });
         });
-        return total;
+        return roundToTwo(total);
     }
 
     // --- CALCULO FACTURACION ---
@@ -697,7 +710,7 @@
                 }
             });
         });
-        return total;
+        return roundToTwo(total);
     }
 
     function showMacroSection(sec) {
@@ -783,9 +796,11 @@
     }
 
     function saveCompanyEntry() {
-        const type = document.getElementById('entryType').value, bank = document.getElementById('bankSelect').value, num = document.getElementById('invNum').value, amount = parseFloat(document.getElementById('amount').value), dBill = document.getElementById('dateBill').value, dPay = document.getElementById('checkPending').checked ? "" : document.getElementById('datePay').value, det = document.getElementById('entryDetail').value;
-        if(!num || isNaN(amount) || !dBill) return alert('Faltan datos');
+        const type = document.getElementById('entryType').value, bank = document.getElementById('bankSelect').value, num = document.getElementById('invNum').value, rawAmount = parseFloat(document.getElementById('amount').value), dBill = document.getElementById('dateBill').value, dPay = document.getElementById('checkPending').checked ? "" : document.getElementById('datePay').value, det = document.getElementById('entryDetail').value;
+        if(!num || isNaN(rawAmount) || !dBill) return alert('Faltan datos');
         
+        const amount = roundToTwo(rawAmount);
+
         let coll = undefined;
         if(editingEntryId) { const old = companies[currentCompany].find(e => e.id === editingEntryId); if(old) coll = old.amountCollected; }
         if(!dPay && !editingEntryId) coll = undefined;
@@ -837,7 +852,7 @@
         const e = companies[comp].find(x => x.id === id); if(!e) return;
         const date = prompt("Fecha Cobro:", new Date().toISOString().split('T')[0]); if(!date) return;
         const raw = prompt("Monto Real:", e.amount); if(raw === null) return;
-        e.datePay = date; e.amountCollected = parseFloat(raw); 
+        e.datePay = date; e.amountCollected = roundToTwo(parseFloat(raw)); 
         logChange("Cobro", `${comp} (${e.num}): ${formatMoney(e.amountCollected)}`);
         saveAll(); refreshIncomeViews();
     }
@@ -958,14 +973,15 @@
         let oldVal = (idx >= 0) ? list[idx].amount : 0;
 
         if(!isNaN(v) && v > 0) { 
+            const cleanV = roundToTwo(v);
             if(idx>=0) {
-                if(list[idx].amount !== v) {
-                    list[idx].amount=v;
-                    logChange("Gasto", `${n}: ${formatMoney(oldVal)} -> ${formatMoney(v)}`);
+                if(list[idx].amount !== cleanV) {
+                    list[idx].amount=cleanV;
+                    logChange("Gasto", `${n}: ${formatMoney(oldVal)} -> ${formatMoney(cleanV)}`);
                 }
             } else {
-                list.push({id:Date.now(), name:n, amount:v});
-                logChange("Gasto", `${n}: ${formatMoney(v)}`);
+                list.push({id:Date.now(), name:n, amount:cleanV});
+                logChange("Gasto", `${n}: ${formatMoney(cleanV)}`);
             }
         } else if(idx>=0) {
             // SI BORRA EL MONTO:
@@ -987,11 +1003,11 @@
         const e = expenses[m]?.find(x => x.name === n);
         const currentVal = e ? e.amount : 0;
         const addVal = prompt(`Monto a sumar a ${n} (Actual: ${formatMoney(currentVal)}):`);
-        if(addVal) {
+        if(addVal && addVal.trim() !== "") {
             let cleanAdd = addVal.replace(',', '.');
             if(!isNaN(parseFloat(cleanAdd))) {
-                const added = parseFloat(cleanAdd);
-                const newVal = currentVal + added;
+                const added = roundToTwo(parseFloat(cleanAdd));
+                const newVal = roundToTwo(currentVal + added);
                 if(!expenses[m]) expenses[m] = [];
                 const idx = expenses[m].findIndex(x => x.name === n);
                 if(idx >= 0) expenses[m][idx].amount = newVal; else expenses[m].push({id:Date.now(), name:n, amount:newVal});
@@ -1063,8 +1079,9 @@
         const a = parseFloat(rawA); 
         if(!n || isNaN(a)) return; 
         if(!expenses[m]) expenses[m]=[]; 
-        expenses[m].push({id:Date.now(), name:n, amount:a}); 
-        logChange("Extra", `Agregado: ${n} (${formatMoney(a)})`);
+        const cleanA = roundToTwo(a);
+        expenses[m].push({id:Date.now(), name:n, amount:cleanA}); 
+        logChange("Extra", `Agregado: ${n} (${formatMoney(cleanA)})`);
         document.getElementById('extraName').value=''; 
         document.getElementById('extraAmount').value=''; 
         saveAll(); loadExpensesView(); 
@@ -1088,7 +1105,7 @@
             const mKey = `${y}-${i.toString().padStart(2, '0')}`;
             const d = salaries[mKey] || { sueldo:0, pres:0 };
             const mauro = getMauroCobrosForMonth(mKey);
-            const yani = (d.sueldo||0) + (d.pres||0);
+            const yani = roundToTwo((d.sueldo||0) + (d.pres||0));
             tbody.innerHTML += `
             <tr>
                 <td><b>${i.toString().padStart(2,'0')}</b></td>
@@ -1112,8 +1129,8 @@
     }
     function saveSal(m, f, v) { 
         if(!salaries[m]) salaries[m]={sueldo:0,pres:0}; 
-        const old = salaries[m][f];
-        const val = parseFloat(v)||0;
+        const old = salaries[m][f] || 0;
+        const val = roundToTwo(parseFloat(v)||0);
         if(old !== val) {
             salaries[m][f]=val; 
             logChange("Sueldo", `Mes ${m} (${f}): ${formatMoney(val)}`);
@@ -1125,11 +1142,11 @@
         if(!salaries[mKey]) salaries[mKey] = { sueldo:0, pres:0 };
         const currentVal = salaries[mKey][field] || 0;
         const addVal = prompt(`Monto a sumar (Actual: ${formatMoney(currentVal)}):`);
-        if (addVal) {
+        if (addVal && addVal.trim() !== "") {
             let cleanAdd = addVal.replace(',', '.');
             if(!isNaN(parseFloat(cleanAdd))) {
-                const added = parseFloat(cleanAdd);
-                const newVal = currentVal + added;
+                const added = roundToTwo(parseFloat(cleanAdd));
+                const newVal = roundToTwo(currentVal + added);
                 saveSal(mKey, field, newVal);
             }
         }
@@ -1190,13 +1207,8 @@
     initTheme();
     renderCompanies();
     window.onclick = (e) => { 
-        // Lógica de cierre seguro
-        if (e.target == document.getElementById('companyModal')) {
-            tryCloseModal();
-        }
-        if (e.target == document.getElementById('historyModal')) {
-            closeHistoryModal();
-        }
+        if (e.target == document.getElementById('companyModal')) tryCloseModal();
+        if (e.target == document.getElementById('historyModal')) closeHistoryModal();
     }
 </script>
 </body>
