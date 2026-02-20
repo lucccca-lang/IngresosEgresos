@@ -4,9 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sistema de Gestión</title>
+    
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
     <style>
-        /* --- ESTILOS VISUALES (BASE V36) --- */
+        /* --- ESTILOS VISUALES --- */
         :root {
             /* MODO CLARO (Default) */
             --primary: #2563eb;       
@@ -48,10 +53,12 @@
         .container { max-width: 1000px; margin: 0 auto; }
 
         /* HEADER SUPERIOR */
-        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .theme-toggle { background: none; border: none; font-size: 24px; cursor: pointer; padding: 5px; border-radius: 50%; transition: 0.2s; }
         .theme-toggle:active { transform: scale(0.9); background: rgba(0,0,0,0.1); }
         [data-theme="dark"] .theme-toggle { filter: invert(1); }
+
+        .cloud-status { font-size: 11px; font-weight: bold; color: #10b981; margin-bottom: 15px; display: flex; align-items: center; gap: 5px;}
 
         /* --- NAVEGACIÓN --- */
         .main-nav {
@@ -204,11 +211,7 @@
         .log-det { color: var(--text-main); }
 
         /* --- CLASES DE UTILIDAD PARA FECHAS EN MODAL --- */
-        .date-grid-responsive {
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 10px;
-        }
+        .date-grid-responsive { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
         /* =========================================================
            AQUÍ ESTÁ LA MAGIA RESPONSIVE (SOLO CELULAR VERTICAL)
@@ -216,26 +219,14 @@
         @media (max-width: 600px) {
             
             /* 1. ARREGLO INGRESOS: Una tarjeta debajo de otra */
-            .summary-grid {
-                grid-template-columns: 1fr !important;
-            }
+            .summary-grid { grid-template-columns: 1fr !important; }
 
             /* 2. ARREGLO ARCA: Inputs más grandes en celular */
-            .arca-input {
-                min-width: 70px !important;
-                font-size: 14px !important;
-                padding: 8px !important;
-            }
+            .arca-input { min-width: 70px !important; font-size: 14px !important; padding: 8px !important; }
 
             /* 3. ARREGLO FECHAS MODAL: Side-by-side pero compactas */
-            .date-grid-responsive {
-                grid-template-columns: 1fr 1fr !important;
-                gap: 8px !important;
-            }
-            #dateBill, #datePay {
-                padding: 6px !important; /* Más compactos en altura */
-                font-size: 13px !important; /* Letra ajustada */
-            }
+            .date-grid-responsive { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+            #dateBill, #datePay { padding: 6px !important; font-size: 13px !important; }
 
             /* Extra: Agrandar texto resumen */
             .summary-row span { font-size: 13px; }
@@ -251,6 +242,8 @@
         <div style="font-weight:bold; font-size:18px;">Sistema de Gestión</div>
         <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
     </div>
+    
+    <div class="cloud-status" id="cloudStatus">⏳ Conectando a la nube...</div>
 
     <nav class="main-nav">
         <button id="nav-income" class="active-income" onclick="showMacroSection('income')">🏢 Empresas</button>
@@ -446,40 +439,31 @@
         <div class="card">
             <h4 style="margin-top:0;">📜 Historial de Cambios</h4>
             <p style="font-size:13px; color:var(--text-sec);">
-                Ver registro de los últimos movimientos realizados.
+                Ver registro de los últimos movimientos realizados en la nube.
             </p>
             <button class="btn-history" onclick="openHistoryModal()">📜 Ver Historial de Cambios</button>
         </div>
 
         <div class="card">
-            <h4 style="margin-top:0;">📤 Copia de Seguridad</h4>
+            <h4 style="margin-top:0;">📊 Exportar a Excel</h4>
             <p style="font-size:13px; color:var(--text-sec);">
-                Descarga un archivo JSON para mover los datos a otro celular.
+                Genera un archivo .xlsx con pestañas organizadas con todos los datos de la nube.
             </p>
-            <button class="btn-data" onclick="exportData()">⬇️ Descargar Copia</button>
+            <button class="btn-excel" onclick="exportToExcel()">📊 Descargar EXCEL</button>
         </div>
 
         <div class="card">
-            <h4 style="margin-top:0;">📥 Restaurar Copia</h4>
+            <h4 style="margin-top:0;">📤 Copia de Seguridad Física</h4>
             <p style="font-size:13px; color:var(--text-sec);">
-                Carga un archivo JSON previamente guardado.
+                (Opcional) Descarga un archivo JSON por si querés guardar un backup manual.
             </p>
-            <input type="file" id="importFile" accept=".json" style="margin-bottom:10px;">
-            <button class="btn-primary" onclick="importData()">⬆️ Restaurar Copia</button>
-        </div>
-        
-        <div class="card">
-            <h4 style="margin-top:0;">📊 Exportar a Excel</h4>
-            <p style="font-size:13px; color:var(--text-sec);">
-                Genera un archivo .xlsx con pestañas organizadas.
-            </p>
-            <button class="btn-excel" onclick="exportToExcel()">📊 Descargar EXCEL</button>
+            <button class="btn-data" onclick="exportData()">⬇️ Descargar Copia Local</button>
         </div>
 
         <div class="card" style="border: 1px solid #ef4444; background:var(--bg);">
             <h4 style="margin-top:0; color:#dc2626;">⚠️ ZONA DE PELIGRO</h4>
             <p style="font-size:13px; color:#b91c1c;">
-                Esto borrará <b>TODA</b> la información. No se puede deshacer.
+                Esto borrará <b>TODA</b> la información de Google Cloud. No se puede deshacer.
             </p>
             <button class="btn-danger" onclick="eraseAllData()">🗑️ BORRAR TODO EL SISTEMA</button>
         </div>
@@ -487,7 +471,7 @@
 
 </div>
 
-<div id="toast">💾 Guardado</div>
+<div id="toast">💾 Guardado en la nube</div>
 
 <div id="companyModal" class="modal">
     <div class="modal-content">
@@ -553,18 +537,103 @@
 </div>
 
 <script>
-    // --- DATOS (MISMAS LLAVES PARA NO PERDER DATOS) ---
-    let companies = JSON.parse(localStorage.getItem('sys_companies_v5')) || {};
-    let expenses = JSON.parse(localStorage.getItem('sys_expenses_v5')) || {};
-    let salaries = JSON.parse(localStorage.getItem('sys_salaries_v2')) || {}; 
-    let changeLogs = JSON.parse(localStorage.getItem('sys_logs_v1')) || [];
+    // ==========================================
+    // CONFIGURACIÓN DE FIREBASE (NUBE)
+    // ==========================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyAHaEdqsWvauWHb2lIcOCDsxaxusIpB27Q",
+      authDomain: "ingresos-egresos-48366.firebaseapp.com",
+      databaseURL: "https://ingresos-egresos-48366-default-rtdb.firebaseio.com",
+      projectId: "ingresos-egresos-48366",
+      storageBucket: "ingresos-egresos-48366.firebasestorage.app",
+      messagingSenderId: "391353690272",
+      appId: "1:391353690272:web:4fe8ab2f51247c99d3c1c5"
+    };
+
+    // Inicializar Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Variables globales
+    let companies = {};
+    let expenses = {};
+    let salaries = {}; 
+    let changeLogs = [];
     
+    let isFirstLoad = true;
     let currentCompany = null;
     let currentBankFilter = 'all';
     let editingEntryId = null; 
 
     const fixedExpenseList = ["AMEX", "TARJ FRANCES", "FRANCES MASTER", "TARJ GALICIA", "TARJ ICBC", "TARJ HIPOTECARIO", "TARJ BANCO NACION", "SERV-LUZ", "GAS", "EXPENSAS", "NAFTA", "SUPERMERCADO", "MUNICIPAL", "ARBA CASA Y PATENTE", "IIGG YANINA", "IIGG MAURO", "MONOTRIBUTO", "COLEGIO LUCCA", "COLEGIO EMMA", "HONORARIOS", "TELEFONOS", "EXTRAS"];
     const expenseColors = ['rgba(255,255,255,0.8)', '#fef9c3', '#dcfce7', '#fee2e2']; 
+
+    // ==========================================
+    // SINCRONIZACIÓN EN TIEMPO REAL
+    // ==========================================
+    db.ref('sistema_gestion').on('value', (snapshot) => {
+        const data = snapshot.val();
+        
+        if (data) {
+            // Ya hay datos en la nube, los descargamos
+            companies = data.companies || {};
+            expenses = data.expenses || {};
+            salaries = data.salaries || {};
+            changeLogs = data.changeLogs || [];
+            document.getElementById('cloudStatus').innerHTML = "☁️ Sincronizado";
+        } else if (isFirstLoad) {
+            // Si la nube está vacía, migramos lo que esté guardado en el celular
+            document.getElementById('cloudStatus').innerHTML = "⚙️ Migrando datos a la nube...";
+            companies = JSON.parse(localStorage.getItem('sys_companies_v5')) || {};
+            expenses = JSON.parse(localStorage.getItem('sys_expenses_v5')) || {};
+            salaries = JSON.parse(localStorage.getItem('sys_salaries_v2')) || {}; 
+            changeLogs = JSON.parse(localStorage.getItem('sys_logs_v1')) || [];
+            
+            // Subir los datos locales a Firebase para no perderlos
+            saveAll(); 
+        }
+
+        if (isFirstLoad) {
+            // Cosas que solo se ejecutan la primera vez que se abre la página
+            isFirstLoad = false;
+            initTheme();
+            renderCompanies();
+        } else {
+            // Actualizar la pantalla si entra un cambio desde otro dispositivo
+            refreshCurrentView();
+        }
+    });
+
+    function saveAll() {
+        // Guarda todo directamente en la Nube
+        db.ref('sistema_gestion').set({
+            companies,
+            expenses,
+            salaries,
+            changeLogs
+        }).then(() => {
+            showToast();
+        }).catch((error) => {
+            alert("Error al conectar con la Nube: " + error);
+        });
+        
+        // Mantiene una copia pasiva en el celular por las dudas
+        try {
+            localStorage.setItem('sys_companies_v5', JSON.stringify(companies));
+            localStorage.setItem('sys_expenses_v5', JSON.stringify(expenses));
+            localStorage.setItem('sys_salaries_v2', JSON.stringify(salaries));
+            localStorage.setItem('sys_logs_v1', JSON.stringify(changeLogs));
+        } catch(e) {}
+    }
+
+    function refreshCurrentView() {
+        if(document.getElementById('macro-income').classList.contains('active')) refreshIncomeViews();
+        if(document.getElementById('macro-expense').classList.contains('active')) loadExpensesView();
+        if(document.getElementById('macro-salary').classList.contains('active')) loadSalaryView();
+        if(document.getElementById('macro-tax').classList.contains('active')) loadTaxView();
+        if(document.getElementById('historyModal').style.display === 'flex') openHistoryModal();
+        if(document.getElementById('companyModal').style.display === 'flex') renderCompanyHistory();
+    }
 
     // --- LOGGING SYSTEM ---
     function logChange(action, detail) {
@@ -573,11 +642,7 @@
         const log = { ts, action, detail };
         changeLogs.unshift(log);
         if(changeLogs.length > 50) changeLogs.pop();
-        try {
-            localStorage.setItem('sys_logs_v1', JSON.stringify(changeLogs));
-        } catch(e) {
-            console.error("Storage full");
-        }
+        // El guardado se hace luego al llamar saveAll() desde la función de origen
     }
 
     function openHistoryModal() {
@@ -717,17 +782,6 @@
         e.value = formatMoney(v);
     }
 
-    function saveAll() {
-        try {
-            localStorage.setItem('sys_companies_v5', JSON.stringify(companies));
-            localStorage.setItem('sys_expenses_v5', JSON.stringify(expenses));
-            localStorage.setItem('sys_salaries_v2', JSON.stringify(salaries));
-            showToast();
-        } catch (e) {
-            alert("⚠️ MEMORIA LLENA: No se pueden guardar más cambios. Borra datos antiguos o exporta una copia.");
-        }
-    }
-
     // --- CALCULO AUTOMATICO PARA MAURO ---
     function getMauroCobrosForMonth(monthKey) {
         let total = 0;
@@ -771,7 +825,7 @@
         if(companies[name]) return alert('Ya existe');
         companies[name] = []; document.getElementById('newCompanyName').value = '';
         logChange("Empresa", "Creada: " + name);
-        saveAll(); renderCompanies(); populateCompanyFilter();
+        saveAll(); 
     }
 
     function renderCompanies() {
@@ -820,14 +874,14 @@
         logChange("Empresa", `Renombrada: ${currentCompany} -> ${newName}`);
         currentCompany = newName; 
         document.getElementById('modalTitle').textContent = newName; 
-        saveAll(); renderCompanies(); populateCompanyFilter(); 
+        saveAll();  
     }
     
     function deleteCompany() { 
         if(!confirm("¿Borrar empresa?")) return; 
         logChange("Empresa", "Borrada: " + currentCompany);
         delete companies[currentCompany]; 
-        saveAll(); renderCompanies(); populateCompanyFilter(); closeModal(); 
+        saveAll(); closeModal(); 
     }
 
     function toggleDateInput() {
@@ -879,6 +933,7 @@
     }
 
     function renderCompanyHistory() {
+        if(!companies[currentCompany]) return;
         const tbody = document.querySelector('#companyHistoryTable tbody'); tbody.innerHTML = '';
         companies[currentCompany].sort((a,b) => new Date(b.dateBill) - new Date(a.dateBill)).forEach(e => {
             const isPend = e.datePay === "";
@@ -895,14 +950,14 @@
         const raw = prompt("Monto Real:", e.amount); if(raw === null) return;
         e.datePay = date; e.amountCollected = roundToTwo(parseFloat(raw)); 
         logChange("Cobro", `${comp} (${e.num}): ${formatMoney(e.amountCollected)}`);
-        saveAll(); refreshIncomeViews();
+        saveAll(); 
     }
 
     function delEntry(comp, id) { 
         if(!confirm('¿Borrar?')) return; 
         companies[comp] = companies[comp].filter(e => e.id !== id); 
         logChange("Factura", `Eliminada en ${comp}`);
-        saveAll(); refreshIncomeViews(); 
+        saveAll(); 
     }
     
     function switchIncomeTab(tab) {
@@ -1035,8 +1090,6 @@
             }
         }
         saveAll(); 
-        updateExpenseTotalDisplay();
-        loadExpensesView(); 
     }
 
     function addToExpense(n) {
@@ -1054,7 +1107,7 @@
                 if(idx >= 0) expenses[m][idx].amount = newVal; else expenses[m].push({id:Date.now(), name:n, amount:newVal});
                 
                 logChange("Gasto Suma", `${n}: Sumado ${formatMoney(added)}`);
-                saveAll(); loadExpensesView();
+                saveAll(); 
             }
         }
     }
@@ -1081,7 +1134,7 @@
             expenses[m][idx].color = nextColor;
         }
         
-        saveAll(); loadExpensesView();
+        saveAll(); 
     }
 
     function updateExpenseTotalDisplay() {
@@ -1125,7 +1178,7 @@
         logChange("Extra", `Agregado: ${n} (${formatMoney(cleanA)})`);
         document.getElementById('extraName').value=''; 
         document.getElementById('extraAmount').value=''; 
-        saveAll(); loadExpensesView(); 
+        saveAll(); 
     }
     
     function delExpense(m, id) { 
@@ -1133,7 +1186,7 @@
             const e = expenses[m].find(x=>x.id===id);
             if(e) logChange("Extra", `Borrado: ${e.name}`);
             expenses[m] = expenses[m].filter(e=>e.id!==id); 
-            saveAll(); loadExpensesView(); 
+            saveAll(); 
         } 
     }
 
@@ -1175,7 +1228,7 @@
         if(old !== val) {
             salaries[m][f]=val; 
             logChange("Sueldo", `Mes ${m} (${f}): ${formatMoney(val)}`);
-            saveAll(); loadSalaryView(); 
+            saveAll(); 
         }
     }
 
@@ -1218,15 +1271,31 @@
     }
 
     function exportData() { const b = new Blob([JSON.stringify({companies,expenses,salaries,changeLogs})], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'backup.json'; a.click(); }
-    function importData() { const f = document.getElementById('importFile').files[0]; const r = new FileReader(); r.onload = (e) => { const d = JSON.parse(e.target.result); companies=d.companies; expenses=d.expenses; salaries=d.salaries; changeLogs=d.changeLogs||[]; saveAll(); location.reload(); }; r.readAsText(f); }
+    
+    // Restaurar copia ahora sube directamente a Firebase
+    function importData() { 
+        const f = document.getElementById('importFile').files[0]; 
+        const r = new FileReader(); 
+        r.onload = (e) => { 
+            const d = JSON.parse(e.target.result); 
+            companies=d.companies || {}; 
+            expenses=d.expenses || {}; 
+            salaries=d.salaries || {}; 
+            changeLogs=d.changeLogs||[]; 
+            saveAll(); 
+            alert("Datos restaurados a la nube con éxito.");
+        }; 
+        r.readAsText(f); 
+    }
     
     // --- BORRAR TODO ---
     function eraseAllData() {
-        if(confirm("⛔ ¡ATENCIÓN! ⛔\n\n¿Estás seguro de que querés BORRAR TODO?\n\nSe perderán todas las empresas, gastos y sueldos de este dispositivo para siempre.")) {
+        if(confirm("⛔ ¡ATENCIÓN! ⛔\n\n¿Estás seguro de que querés BORRAR TODO DE LA NUBE?\n\nSe perderán todas las empresas, gastos y sueldos de todos los dispositivos conectados.")) {
             if(confirm("¿De verdad? Esta es la última oportunidad para cancelar.")) {
+                companies = {}; expenses = {}; salaries = {}; changeLogs = [];
+                saveAll();
                 localStorage.clear();
                 alert("Sistema reiniciado a cero.");
-                location.reload();
             }
         }
     }
@@ -1244,9 +1313,6 @@
     document.getElementById('taxYear').value = currentYear;
     document.getElementById('filterYear').value = currentYear;
 
-    // Ejecutar inicio
-    initTheme();
-    renderCompanies();
     window.onclick = (e) => { 
         if (e.target == document.getElementById('companyModal')) tryCloseModal();
         if (e.target == document.getElementById('historyModal')) closeHistoryModal();
