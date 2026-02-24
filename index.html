@@ -379,7 +379,7 @@
                 <h4 style="margin:0 0 10px 0; font-size:12px; color:var(--text-sec);">Gasto Extra</h4>
                 <div style="display:flex; gap:5px;">
                     <input type="text" id="extraName" placeholder="Ej: Farmacia" style="margin:0;">
-                    <input type="text" inputmode="decimal" id="extraAmount" placeholder="$" style="width:80px; margin:0;" onfocus="cleanInput(this)" onblur="fmtInput(this)">
+                    <input type="text" inputmode="decimal" id="extraAmount" placeholder="$ Monto" style="width:80px; margin:0;" onfocus="cleanInput(this)" onblur="fmtInput(this)">
                 </div>
                 <button class="btn-sm" style="background:var(--data-color); color:white; width:100%; margin-top:5px;" onclick="addExtraExpense()">+ Agregar</button>
             </div>
@@ -539,7 +539,7 @@
             </div>
             <div style="display:flex; gap:10px;">
                 <input type="text" id="invNum" placeholder="N° Factura">
-                <input type="number" step="0.01" id="amount" placeholder="$ Monto">
+                <input type="text" inputmode="decimal" id="amount" placeholder="$ Monto" onfocus="cleanInput(this)" onblur="fmtInput(this)">
             </div>
             <input type="text" id="entryDetail" placeholder="Detalle (Opcional)">
             
@@ -811,22 +811,48 @@
         setTimeout(() => { t.className = t.className.replace("show", ""); }, 2000);
     }
 
-    // --- MANEJO DE INPUTS DINERO ---
+    // ==========================================
+    // NUEVA LÓGICA INTELIGENTE DE NÚMEROS
+    // ==========================================
+    
+    // Función que convierte cualquier cosa (1000.50, 1000,50 o $ 1.000,50) en un número puro real
+    function parseInputAsFloat(val) {
+        if(val === null || val === undefined || val === '') return NaN;
+        let str = val.toString().replace('$', '').trim();
+        
+        // Si tiene formato estético con punto de miles y coma (ej: 1.000,50)
+        if(str.includes('.') && str.includes(',')) {
+            str = str.replace(/\./g, '').replace(',', '.');
+        } 
+        // Si el usuario simplemente tipeó con coma (ej: 1000,50)
+        else if(str.includes(',')) {
+            str = str.replace(',', '.');
+        }
+        // Si tipeó con punto (ej: 1000.50) el parseFloat lo lee perfecto directo
+        
+        return parseFloat(str);
+    }
+
     function cleanInput(e) {
         let v = e.value;
-        v = v.replace('$', '').replace(/\./g, '').replace(',', '.').trim();
+        if(v.includes('$')) {
+            v = v.replace('$', '').trim();
+            // Le sacamos los puntos de miles para que sea fácil editar, y dejamos el punto real
+            v = v.replace(/\./g, '').replace(',', '.');
+        }
         e.value = v;
-        e.type = 'number';
+        // Se borró "e.type = 'number'" porque eso rompía el teclado del celular
     }
 
     function fmtInput(e) {
-        e.type = 'text';
-        let raw = e.value;
+        let raw = e.value.trim();
         if(raw === '') return;
-        let v = parseFloat(raw);
+        let v = parseInputAsFloat(raw);
         if(isNaN(v)) { e.value = ''; return; }
         e.value = formatMoney(v);
     }
+
+    // ==========================================
 
     function getMauroCobrosForMonth(monthKey) {
         let total = 0;
@@ -935,7 +961,10 @@
     }
 
     function saveCompanyEntry() {
-        const type = document.getElementById('entryType').value, bank = document.getElementById('bankSelect').value, num = document.getElementById('invNum').value, rawAmount = parseFloat(document.getElementById('amount').value), dBill = document.getElementById('dateBill').value, dPay = document.getElementById('checkPending').checked ? "" : document.getElementById('datePay').value, det = document.getElementById('entryDetail').value;
+        const type = document.getElementById('entryType').value, bank = document.getElementById('bankSelect').value, num = document.getElementById('invNum').value;
+        const rawAmount = parseInputAsFloat(document.getElementById('amount').value);
+        const dBill = document.getElementById('dateBill').value, dPay = document.getElementById('checkPending').checked ? "" : document.getElementById('datePay').value, det = document.getElementById('entryDetail').value;
+        
         if(!num || isNaN(rawAmount) || !dBill) return alert('Faltan datos');
         
         const amount = roundToTwo(rawAmount);
@@ -964,7 +993,11 @@
         const entry = companies[currentCompany].find(e => e.id === id); if(!entry) return;
         editingEntryId = id; 
         let safeType = entry.type; if(safeType === 'factura' || safeType === 'auditoria') safeType = 'fac_mauro';
-        document.getElementById('entryType').value = safeType; document.getElementById('bankSelect').value = entry.bank; document.getElementById('invNum').value = entry.num; document.getElementById('amount').value = entry.amount; document.getElementById('dateBill').value = entry.dateBill; document.getElementById('entryDetail').value = entry.detail || '';
+        document.getElementById('entryType').value = safeType; document.getElementById('bankSelect').value = entry.bank; document.getElementById('invNum').value = entry.num; document.getElementById('dateBill').value = entry.dateBill; document.getElementById('entryDetail').value = entry.detail || '';
+        
+        // Carga y formatea el dinero a visualizar
+        document.getElementById('amount').value = entry.amount ? formatMoney(entry.amount) : ''; 
+        
         if(entry.datePay === "") { document.getElementById('checkPending').checked = true; document.getElementById('datePay').value = ''; } 
         else { document.getElementById('checkPending').checked = false; document.getElementById('datePay').value = entry.datePay; }
         toggleDateInput();
@@ -992,7 +1025,7 @@
         const e = companies[comp].find(x => x.id === id); if(!e) return;
         const date = prompt("Fecha Cobro:", new Date().toISOString().split('T')[0]); if(!date) return;
         const raw = prompt("Monto Real:", e.amount); if(raw === null) return;
-        e.datePay = date; e.amountCollected = roundToTwo(parseFloat(raw)); 
+        e.datePay = date; e.amountCollected = roundToTwo(parseInputAsFloat(raw)); 
         logChange("Cobro", `${comp} (${e.num}): ${formatMoney(e.amountCollected)}`);
         saveAll(); 
     }
@@ -1010,7 +1043,7 @@
         const raw = prompt(`💰 Monto TOTAL cobrado (se repartirá automáticamente):\nSuma facturada: ${formatMoney(totalCalc)}`, totalCalc); 
         if(raw === null) return;
 
-        const totalCollected = roundToTwo(parseFloat(raw));
+        const totalCollected = roundToTwo(parseInputAsFloat(raw));
         let ratio = totalCollected / totalCalc;
         
         items.forEach(e => {
@@ -1221,9 +1254,8 @@
     function autoSaveFixed(n) { 
         const m = document.getElementById('expenseMonth').value;
         const input = document.getElementById("fix_"+n.replace(/\s/g,''));
-        let raw = input.value;
-        if(raw.includes('$')) raw = raw.replace('$', '').replace(/\./g, '').replace(',', '.').trim();
-        const v = parseFloat(raw);
+        
+        const v = parseInputAsFloat(input.value);
         let list = expenses[m], idx = list.findIndex(x=>x.name===n); 
         
         let oldVal = (idx >= 0) ? list[idx].amount : 0;
@@ -1258,9 +1290,9 @@
         const currentVal = e ? e.amount : 0;
         const addVal = prompt(`Monto a sumar a ${n} (Actual: ${formatMoney(currentVal)}):`);
         if(addVal && addVal.trim() !== "") {
-            let cleanAdd = addVal.replace(',', '.');
-            if(!isNaN(parseFloat(cleanAdd))) {
-                const added = roundToTwo(parseFloat(cleanAdd));
+            let cleanAdd = parseInputAsFloat(addVal);
+            if(!isNaN(cleanAdd)) {
+                const added = roundToTwo(cleanAdd);
                 const newVal = roundToTwo(currentVal + added);
                 if(!expenses[m]) expenses[m] = [];
                 const idx = expenses[m].findIndex(x => x.name === n);
@@ -1328,9 +1360,7 @@
     
     function addExtraExpense() { 
         const m = document.getElementById('expenseMonth').value, n = document.getElementById('extraName').value;
-        let rawA = document.getElementById('extraAmount').value;
-        if(rawA.includes('$')) rawA = rawA.replace('$', '').replace(/\./g, '').replace(',', '.').trim();
-        const a = parseFloat(rawA); 
+        const a = parseInputAsFloat(document.getElementById('extraAmount').value); 
         if(!n || isNaN(a)) return; 
         if(!expenses[m]) expenses[m]=[]; 
         const cleanA = roundToTwo(a);
@@ -1365,13 +1395,13 @@
                 <td><b>${i.toString().padStart(2,'0')}</b></td>
                 <td>
                     <div class="salary-cell-wrapper">
-                        <input type="number" step="0.01" class="salary-input" value="${d.sueldo||''}" onchange="saveSal('${mKey}','sueldo',this.value)">
+                        <input type="text" inputmode="decimal" class="salary-input" value="${d.sueldo ? formatMoney(d.sueldo) : ''}" onfocus="cleanInput(this)" onblur="fmtInput(this); saveSal('${mKey}','sueldo',this.value)">
                         <button class="btn-add-salary" onclick="addToSalary('${mKey}','sueldo')">+</button>
                     </div>
                 </td>
                 <td>
                     <div class="salary-cell-wrapper">
-                        <input type="number" step="0.01" class="salary-input" value="${d.pres||''}" onchange="saveSal('${mKey}','pres',this.value)">
+                        <input type="text" inputmode="decimal" class="salary-input" value="${d.pres ? formatMoney(d.pres) : ''}" onfocus="cleanInput(this)" onblur="fmtInput(this); saveSal('${mKey}','pres',this.value)">
                         <button class="btn-add-salary" onclick="addToSalary('${mKey}','pres')">+</button>
                     </div>
                 </td>
@@ -1384,7 +1414,7 @@
     function saveSal(m, f, v) { 
         if(!salaries[m]) salaries[m]={sueldo:0,pres:0}; 
         const old = salaries[m][f] || 0;
-        const val = roundToTwo(parseFloat(v)||0);
+        const val = roundToTwo(parseInputAsFloat(v) || 0);
         if(old !== val) {
             salaries[m][f]=val; 
             logChange("Sueldo", `Mes ${m} (${f}): ${formatMoney(val)}`);
@@ -1397,11 +1427,12 @@
         const currentVal = salaries[mKey][field] || 0;
         const addVal = prompt(`Monto a sumar (Actual: ${formatMoney(currentVal)}):`);
         if (addVal && addVal.trim() !== "") {
-            let cleanAdd = addVal.replace(',', '.');
-            if(!isNaN(parseFloat(cleanAdd))) {
-                const added = roundToTwo(parseFloat(cleanAdd));
+            let cleanAdd = parseInputAsFloat(addVal);
+            if(!isNaN(cleanAdd)) {
+                const added = roundToTwo(cleanAdd);
                 const newVal = roundToTwo(currentVal + added);
                 saveSal(mKey, field, newVal);
+                loadSalaryView(); // Refrescar vista
             }
         }
     }
