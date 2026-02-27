@@ -105,20 +105,20 @@
             border-radius: 8px; font-weight: 600; color: var(--text-sec); font-size: 12px; min-width: 80px; text-align: center;
         }
         .tab-btn.active { background: var(--bg); color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .tab-btn.active-red { background: var(--bg); color: var(--expense-color); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-        /* FILTROS DE BANCOS */
+        /* FILTROS DE BANCOS Y TAGS DE GASTOS */
         .bank-filters {
             display: flex; gap: 8px; margin-top: 15px;
         }
-        .bank-filter-btn {
-            flex: 1; padding: 10px 5px; border: 1px solid var(--border);
+        .filter-tag-btn {
+            flex: none; padding: 6px 12px; border: 1px solid var(--border);
             background: var(--bg); color: var(--text-sec);
             border-radius: 8px; font-size: 11px; font-weight: 800;
-            cursor: pointer; transition: all 0.2s;
+            cursor: pointer; transition: all 0.2s; white-space: nowrap;
         }
-        .bank-filter-btn.active {
-            background: var(--primary); color: white; border-color: var(--primary);
-        }
+        .filter-tag-btn.active-blue { background: var(--primary); color: white; border-color: var(--primary); }
+        .filter-tag-btn.active-red { background: var(--expense-color); color: white; border-color: var(--expense-color); }
 
         /* INPUTS GENERICOS */
         input, select { 
@@ -145,15 +145,6 @@
         .btn-add-salary:active { background: #6ee7b7; }
         [data-theme="dark"] .btn-add-salary { background: #065f46; color: #d1fae5; border-color: #059669; }
 
-        /* INPUTS ARCA */
-        .arca-input {
-            width: 100%; padding: 5px !important; font-size: 12px !important; 
-            text-align: center; background: #f3f0ff !important; 
-            border: 1px solid #d8b4fe !important; border-radius: 5px; margin: 0 !important;
-            color: #581c87; font-weight: 600;
-        }
-        [data-theme="dark"] .arca-input { background: #4c1d95 !important; color: #e9d5ff !important; border-color: #7c3aed !important; }
-
         /* INPUTS GASTOS */
         .fix-expense-input { margin: 0 !important; text-align: right; font-weight: bold; color: #334155; font-size: 14px; transition: background 0.3s; background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.1); }
         [data-theme="dark"] .fix-expense-input { color: #0f172a; } 
@@ -170,7 +161,7 @@
 
         /* BOTONES GENERICOS */
         .btn-primary { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; }
-        .btn-data { background: var(--data-color); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; }
+        .btn-data { background: var(--data-color); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; margin-bottom: 10px; }
         .btn-excel { background: #15803d; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; margin-bottom: 10px; }
         .btn-history { background: #8b5cf6; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; margin-bottom: 10px; }
         
@@ -220,7 +211,9 @@
             background: var(--white); border: 2px solid var(--border); color: var(--text-main);
             padding: 15px; border-radius: 12px; cursor: pointer; font-weight: 700; text-align: center;
             display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80px;
+            transition: all 0.3s;
         }
+        .company-btn.inactive { opacity: 0.5; border-style: dashed; background: transparent; }
         
         /* TABLAS */
         .table-wrapper { overflow-x: auto; margin-top: 5px; }
@@ -336,9 +329,9 @@
                     <input type="month" id="collectedMonthSelector" onchange="loadCollectedView()" style="width:auto; margin:0;">
                 </div>
                 <div class="bank-filters">
-                    <button class="bank-filter-btn active" onclick="filterBank('all', this)">VER TODO</button>
-                    <button class="bank-filter-btn" onclick="filterBank('galicia', this)">GALICIA</button>
-                    <button class="bank-filter-btn" onclick="filterBank('frances', this)">FRANCÉS</button>
+                    <button class="filter-tag-btn active-blue" onclick="filterBank('all', this)">VER TODO</button>
+                    <button class="filter-tag-btn" onclick="filterBank('galicia', this)">GALICIA</button>
+                    <button class="filter-tag-btn" onclick="filterBank('frances', this)">FRANCÉS</button>
                 </div>
             </div>
             <div id="collectedResults"></div>
@@ -367,24 +360,56 @@
     </div>
 
     <div id="macro-expense" class="macro-section">
-        <div class="card" style="border: 1px solid var(--expense-color);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h3 style="margin:0; color:var(--expense-color);">Gastos</h3>
-                <input type="month" id="expenseMonth" onchange="loadExpensesView()" style="width:auto; margin:0;">
-            </div>
-            <div id="fixedExpensesGrid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px;"></div>
-            <p style="text-align:center; font-size:11px; color:var(--text-sec); margin-top:0;">* Automático: Rojo (vacío) / Verde (cargado). Manual: 🎨.</p>
-            <hr style="margin: 20px 0; border:0; border-top:1px dashed var(--border);">
-            <div style="background:var(--bg); padding:10px; border-radius:8px; border:1px solid var(--border);">
-                <h4 style="margin:0 0 10px 0; font-size:12px; color:var(--text-sec);">Gasto Extra</h4>
-                <div style="display:flex; gap:5px;">
-                    <input type="text" id="extraName" placeholder="Ej: Farmacia" style="margin:0;">
-                    <input type="text" inputmode="decimal" id="extraAmount" placeholder="$ Monto" style="width:80px; margin:0;" onfocus="cleanInput(this)" onblur="fmtInput(this)">
-                </div>
-                <button class="btn-sm" style="background:var(--data-color); color:white; width:100%; margin-top:5px;" onclick="addExtraExpense()">+ Agregar</button>
-            </div>
+        
+        <div class="tabs">
+            <button id="tabExp1" class="tab-btn active-red" onclick="switchExpenseTab('monthly')">Carga Mensual</button>
+            <button id="tabExp2" class="tab-btn" onclick="switchExpenseTab('annual')">Ficha Anual</button>
         </div>
-        <div id="expensesResults"></div>
+
+        <div id="view-exp-monthly" class="view-section active">
+            <div class="card" style="border: 1px solid var(--expense-color);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 style="margin:0; color:var(--expense-color);">Gastos</h3>
+                    <input type="month" id="expenseMonth" onchange="loadExpensesView()" style="width:auto; margin:0;">
+                </div>
+                <div id="fixedExpensesGrid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px;"></div>
+                <p style="text-align:center; font-size:11px; color:var(--text-sec); margin-top:0;">* Automático: Rojo (vacío) / Verde (cargado). Manual: 🎨.</p>
+                <hr style="margin: 20px 0; border:0; border-top:1px dashed var(--border);">
+                <div style="background:var(--bg); padding:10px; border-radius:8px; border:1px solid var(--border);">
+                    <h4 style="margin:0 0 10px 0; font-size:12px; color:var(--text-sec);">Gasto Extra</h4>
+                    <div style="display:flex; gap:5px;">
+                        <input type="text" id="extraName" placeholder="Ej: Farmacia" style="margin:0;">
+                        <input type="text" inputmode="decimal" id="extraAmount" placeholder="$ Monto" style="width:80px; margin:0;" onfocus="cleanInput(this)" onblur="fmtInput(this)">
+                    </div>
+                    <button class="btn-sm" style="background:var(--data-color); color:white; width:100%; margin-top:5px;" onclick="addExtraExpense()">+ Agregar</button>
+                </div>
+            </div>
+            <div id="expensesResults"></div>
+        </div>
+
+        <div id="view-exp-annual" class="view-section">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="margin:0; font-size:14px; color:var(--text-sec);">Historial de Gastos</h3>
+                    <select id="expenseFilterYear" onchange="renderExpenseFilterOptions()" style="width:auto; margin:0; font-weight:bold;">
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2028">2028</option>
+                        <option value="2029">2029</option>
+                        <option value="2030">2030</option>
+                    </select>
+                </div>
+                <div style="margin-top:10px;">
+                    <p style="font-size:11px; margin:0 0 5px 0;">Tocá uno o más gastos para comparar:</p>
+                    <div id="expenseFilterTags" style="display:flex; flex-wrap:wrap; gap:5px; max-height:180px; overflow-y:auto; padding-bottom:5px;"></div>
+                </div>
+                <button class="btn-sm" style="margin-top:10px; background:var(--border); color:var(--text-main);" onclick="clearExpenseFilters()">Limpiar Selección</button>
+            </div>
+            <div id="expenseFilterResults"></div>
+        </div>
+
     </div>
 
     <div id="macro-salary" class="macro-section">
@@ -422,7 +447,7 @@
 
     <div id="macro-tax" class="macro-section">
         <div style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
-             <h3 style="margin:0; color:var(--tax-color)">Ingresos / ARCA</h3>
+             <h3 style="margin:0; color:var(--tax-color)">Ingresos Facturados</h3>
              <select id="taxYear" onchange="loadTaxView()" style="width:auto; margin:0; font-weight:bold;">
                  <option value="2024">2024</option>
                  <option value="2025">2025</option>
@@ -455,15 +480,13 @@
         </div>
         <div class="card">
             <div class="table-wrapper">
-                <table>
+                <table style="text-align: center;">
                     <thead>
                         <tr>
-                            <th style="width:30px">Mes</th>
-                            <th>Fact. Yani</th>
-                            <th>Fact. Mauro</th>
-                            <th>TOTAL</th>
-                            <th style="width:60px;">ARCA Y</th>
-                            <th style="width:60px;">ARCA M</th>
+                            <th style="width:30px; text-align: center;">Mes</th>
+                            <th style="text-align: center;">Fact. Yani</th>
+                            <th style="text-align: center;">Fact. Mauro</th>
+                            <th style="text-align: center;">TOTAL</th>
                         </tr>
                     </thead>
                     <tbody id="taxTableBody"></tbody>
@@ -495,9 +518,18 @@
         <div class="card">
             <h4 style="margin-top:0;">📤 Copia de Seguridad Física</h4>
             <p style="font-size:13px; color:var(--text-sec);">
-                (Opcional) Descarga un archivo JSON por si querés guardar un backup manual.
+                Descarga un archivo JSON por si querés guardar un backup manual.
             </p>
             <button class="btn-data" onclick="exportData()">⬇️ Descargar Copia Local</button>
+            
+            <hr style="margin: 15px 0; border:0; border-top:1px solid var(--border);">
+            
+            <h4 style="margin-top:0;">📥 Restaurar Copia Local</h4>
+            <p style="font-size:13px; color:var(--text-sec);">
+                Sube un archivo .json descargado previamente para sobreescribir la nube.
+            </p>
+            <input type="file" id="importFile" accept=".json" style="margin-bottom:8px; font-size:12px; padding:5px; background: var(--bg);">
+            <button class="btn-sm" style="background:#ca8a04; color:white; width:100%; padding:10px; font-size:14px; border-radius:8px;" onclick="importData()">Restaurar desde Archivo</button>
         </div>
 
         <div class="card" style="border: 1px solid #ef4444; background:var(--bg);">
@@ -605,6 +637,7 @@
     let currentCompany = null;
     let currentBankFilter = 'all';
     let editingEntryId = null; 
+    let selectedExpenseFilters = [];
 
     // LISTA ACTUALIZADA DE GASTOS FIJOS
     const fixedExpenseList = ["AMEX", "TARJ FRANCES", "FRANCES MASTER", "TARJ GALICIA", "TARJ ICBC", "TARJ HIPOTECARIO", "TARJ BANCO NACION", "SERV-LUZ", "GAS", "EXPENSAS", "NAFTA", "SUPERMERCADO", "MUNICIPAL", "ARBA CASA", "PATENTE C3", "PATENTE C4", "IIGG YANINA", "IIGG MAURO", "MONOTRIBUTO", "COLEGIO LUCCA", "COLEGIO EMMA", "HONORARIOS", "TELEFONOS", "EXTRAS"];
@@ -676,7 +709,10 @@
 
     function refreshCurrentView() {
         if(document.getElementById('macro-income').classList.contains('active')) refreshIncomeViews();
-        if(document.getElementById('macro-expense').classList.contains('active')) loadExpensesView();
+        if(document.getElementById('macro-expense').classList.contains('active')) {
+            if(document.getElementById('view-exp-monthly').style.display !== 'none') loadExpensesView();
+            else renderExpenseFilterOptions();
+        }
         if(document.getElementById('macro-salary').classList.contains('active')) loadSalaryView();
         if(document.getElementById('macro-tax').classList.contains('active')) loadTaxView();
         if(document.getElementById('historyModal').style.display === 'flex') openHistoryModal();
@@ -811,25 +847,12 @@
         setTimeout(() => { t.className = t.className.replace("show", ""); }, 2000);
     }
 
-    // ==========================================
-    // NUEVA LÓGICA INTELIGENTE DE NÚMEROS
-    // ==========================================
-    
-    // Función que convierte cualquier cosa (1000.50, 1000,50 o $ 1.000,50) en un número puro real
+    // --- MANEJO DE INPUTS DINERO ---
     function parseInputAsFloat(val) {
         if(val === null || val === undefined || val === '') return NaN;
         let str = val.toString().replace('$', '').trim();
-        
-        // Si tiene formato estético con punto de miles y coma (ej: 1.000,50)
-        if(str.includes('.') && str.includes(',')) {
-            str = str.replace(/\./g, '').replace(',', '.');
-        } 
-        // Si el usuario simplemente tipeó con coma (ej: 1000,50)
-        else if(str.includes(',')) {
-            str = str.replace(',', '.');
-        }
-        // Si tipeó con punto (ej: 1000.50) el parseFloat lo lee perfecto directo
-        
+        if(str.includes('.') && str.includes(',')) { str = str.replace(/\./g, '').replace(',', '.'); } 
+        else if(str.includes(',')) { str = str.replace(',', '.'); }
         return parseFloat(str);
     }
 
@@ -837,11 +860,9 @@
         let v = e.value;
         if(v.includes('$')) {
             v = v.replace('$', '').trim();
-            // Le sacamos los puntos de miles para que sea fácil editar, y dejamos el punto real
             v = v.replace(/\./g, '').replace(',', '.');
         }
         e.value = v;
-        // Se borró "e.type = 'number'" porque eso rompía el teclado del celular
     }
 
     function fmtInput(e) {
@@ -851,8 +872,6 @@
         if(isNaN(v)) { e.value = ''; return; }
         e.value = formatMoney(v);
     }
-
-    // ==========================================
 
     function getMauroCobrosForMonth(monthKey) {
         let total = 0;
@@ -883,7 +902,11 @@
         document.getElementById('macro-' + sec).classList.add('active');
         document.querySelectorAll('.main-nav button').forEach(b => b.className = '');
         document.getElementById('nav-' + sec).classList.add('active-' + sec);
-        if(sec === 'expense') loadExpensesView();
+        
+        if(sec === 'expense') {
+            if(document.getElementById('view-exp-monthly').style.display !== 'none') loadExpensesView();
+            else renderExpenseFilterOptions();
+        }
         if(sec === 'income') refreshIncomeViews();
         if(sec === 'salary') loadSalaryView();
         if(sec === 'tax') loadTaxView();
@@ -899,18 +922,55 @@
     }
 
     function renderCompanies() {
-        const container = document.getElementById('companiesList'); container.innerHTML = '';
-        Object.keys(companies).sort().forEach(name => {
-            const btn = document.createElement('div'); btn.className = 'company-btn';
+        const container = document.getElementById('companiesList'); 
+        container.innerHTML = '';
+        
+        const cutoffDate = new Date();
+        cutoffDate.setMonth(cutoffDate.getMonth() - 2);
+        const cutoffStr = cutoffDate.toISOString().split('T')[0];
+
+        let activeCompanies = [];
+        let inactiveCompanies = [];
+
+        Object.keys(companies).forEach(name => {
+            const list = companies[name];
+            let isInactive = false;
+            if (list.length > 0) {
+                let latestDateStr = list.reduce((max, entry) => (entry.dateBill > max ? entry.dateBill : max), "1970-01-01");
+                if (latestDateStr < cutoffStr) isInactive = true;
+            }
+            if (isInactive) inactiveCompanies.push(name);
+            else activeCompanies.push(name);
+        });
+
+        activeCompanies.sort();
+        inactiveCompanies.sort();
+
+        const renderBtn = (name, isInactive) => {
+            const btn = document.createElement('div'); 
+            btn.className = 'company-btn' + (isInactive ? ' inactive' : '');
+            
             const pend = companies[name].filter(e => e.datePay === "").length;
             const badge = pend > 0 ? `<div style="background:#fee2e2; color:#ef4444; font-size:10px; padding:2px 6px; border-radius:10px; margin-top:5px;">⚠️ ${pend} Pend</div>` : '';
+            
             btn.innerHTML = `<span style="font-size:14px;">${name}</span> ${badge}`;
-            btn.onclick = () => openCompanyModal(name); container.appendChild(btn);
-        });
+            btn.onclick = () => openCompanyModal(name); 
+            container.appendChild(btn);
+        };
+
+        activeCompanies.forEach(name => renderBtn(name, false));
+        inactiveCompanies.forEach(name => renderBtn(name, true));
+
         populateCompanyFilter();
     }
 
-    function openCompanyModal(name) { currentCompany = name; document.getElementById('modalTitle').textContent = name; document.getElementById('companyModal').style.display = 'flex'; cancelEditMode(); renderCompanyHistory(); }
+    function openCompanyModal(name) { 
+        currentCompany = name; 
+        document.getElementById('modalTitle').textContent = name; 
+        document.getElementById('companyModal').style.display = 'flex'; 
+        cancelEditMode(); 
+        renderCompanyHistory(); 
+    }
     
     function hasUnsavedData() {
         const num = document.getElementById('invNum').value.trim();
@@ -995,7 +1055,6 @@
         let safeType = entry.type; if(safeType === 'factura' || safeType === 'auditoria') safeType = 'fac_mauro';
         document.getElementById('entryType').value = safeType; document.getElementById('bankSelect').value = entry.bank; document.getElementById('invNum').value = entry.num; document.getElementById('dateBill').value = entry.dateBill; document.getElementById('entryDetail').value = entry.detail || '';
         
-        // Carga y formatea el dinero a visualizar
         document.getElementById('amount').value = entry.amount ? formatMoney(entry.amount) : ''; 
         
         if(entry.datePay === "") { document.getElementById('checkPending').checked = true; document.getElementById('datePay').value = ''; } 
@@ -1005,8 +1064,31 @@
     }
 
     function cancelEditMode() {
-        editingEntryId = null; document.getElementById('invNum').value = ''; document.getElementById('amount').value = ''; document.getElementById('entryDetail').value = ''; document.getElementById('dateBill').value = new Date().toISOString().split('T')[0]; document.getElementById('datePay').value = new Date().toISOString().split('T')[0]; document.getElementById('checkPending').checked = false; toggleDateInput();
-        document.getElementById('btnSaveEntry').textContent = "Guardar"; document.getElementById('btnSaveEntry').style.background = "var(--primary)"; document.getElementById('entryFormCard').style.background = "var(--bg)"; document.getElementById('btnCancelEdit').style.display = 'none';
+        editingEntryId = null; 
+        document.getElementById('invNum').value = ''; 
+        document.getElementById('amount').value = ''; 
+        document.getElementById('entryDetail').value = ''; 
+        document.getElementById('dateBill').value = new Date().toISOString().split('T')[0]; 
+        document.getElementById('datePay').value = new Date().toISOString().split('T')[0]; 
+        document.getElementById('checkPending').checked = false; 
+        toggleDateInput();
+        
+        document.getElementById('btnSaveEntry').textContent = "Guardar"; 
+        document.getElementById('btnSaveEntry').style.background = "var(--primary)"; 
+        document.getElementById('entryFormCard').style.background = "var(--bg)"; 
+        document.getElementById('btnCancelEdit').style.display = 'none';
+
+        if (currentCompany && companies[currentCompany] && companies[currentCompany].length > 0) {
+            let lastEntry = companies[currentCompany].reduce((prev, current) => (prev.id > current.id) ? prev : current);
+            let safeType = lastEntry.type; 
+            if(safeType === 'factura' || safeType === 'auditoria') safeType = 'fac_mauro';
+            
+            document.getElementById('entryType').value = safeType;
+            document.getElementById('bankSelect').value = lastEntry.bank || 'galicia';
+        } else {
+            document.getElementById('entryType').value = 'fac_mauro';
+            document.getElementById('bankSelect').value = 'galicia';
+        }
     }
 
     function renderCompanyHistory() {
@@ -1036,11 +1118,10 @@
         if(!items.length) return;
         
         const totalCalc = items.reduce((s,e)=>s+e.amount, 0);
-        
         const date = prompt("📅 Fecha de Cobro para TODO el grupo:", new Date().toISOString().split('T')[0]); 
         if(!date) return;
         
-        const raw = prompt(`💰 Monto TOTAL cobrado (se repartirá automáticamente):\nSuma facturada: ${formatMoney(totalCalc)}`, totalCalc); 
+        const raw = prompt(`💰 Monto TOTAL cobrado:\nSuma facturada: ${formatMoney(totalCalc)}`, totalCalc); 
         if(raw === null) return;
 
         const totalCollected = roundToTwo(parseInputAsFloat(raw));
@@ -1204,7 +1285,7 @@
         }
     }
 
-    function filterBank(f, b) { currentBankFilter = f; document.querySelectorAll('.bank-filter-btn').forEach(x => x.classList.remove('active')); b.classList.add('active'); loadCollectedView(); }
+    function filterBank(f, b) { currentBankFilter = f; document.querySelectorAll('#view-collected .filter-tag-btn').forEach(x => x.classList.remove('active-blue')); b.classList.add('active-blue'); loadCollectedView(); }
     function populateCompanyFilter() { const s = document.getElementById('companyFilterSelect'); s.innerHTML = '<option value="">-- Elige una empresa --</option>'; Object.keys(companies).sort().forEach(c => s.innerHTML += `<option value="${c}">${c}</option>`); }
     function loadCompanySpecificStats() {
         const c = document.getElementById('companyFilterSelect').value, y = document.getElementById('filterYear').value, div = document.getElementById('companyFilterResults'); div.innerHTML = ''; if(!c) return;
@@ -1219,21 +1300,34 @@
     }
 
     // ==========================================
-    // SECCIÓN 2: GASTOS (LOGICA COLOR AUTO/MANUAL)
+    // SECCIÓN 2: GASTOS (LOGICA COLOR AUTO/MANUAL Y FICHA)
     // ==========================================
+    
+    function switchExpenseTab(tab) {
+        document.getElementById('view-exp-monthly').style.display = 'none';
+        document.getElementById('view-exp-annual').style.display = 'none';
+        document.getElementById('tabExp1').classList.remove('active-red');
+        document.getElementById('tabExp2').classList.remove('active-red');
+
+        if(tab === 'monthly') {
+            document.getElementById('view-exp-monthly').style.display = 'block';
+            document.getElementById('tabExp1').classList.add('active-red');
+            loadExpensesView();
+        } else {
+            document.getElementById('view-exp-annual').style.display = 'block';
+            document.getElementById('tabExp2').classList.add('active-red');
+            renderExpenseFilterOptions();
+        }
+    }
+
     function loadExpensesView() {
         const m = document.getElementById('expenseMonth').value, grid = document.getElementById('fixedExpensesGrid'); if(!expenses[m]) expenses[m] = []; grid.innerHTML = '';
         fixedExpenseList.forEach(name => {
             const e = expenses[m].find(x => x.name === name), val = e ? e.amount : '', userColor = (e && e.color) ? e.color : null;
             
             let bg;
-            if (userColor !== null && userColor !== undefined) {
-                // COLOR MANUAL FIJO
-                bg = expenseColors[userColor];
-            } else {
-                // COLOR AUTOMATICO: Rojo si vacío, Verde si tiene monto
-                bg = (val > 0) ? expenseColors[2] : expenseColors[3];
-            }
+            if (userColor !== null && userColor !== undefined) bg = expenseColors[userColor];
+            else bg = (val > 0) ? expenseColors[2] : expenseColors[3];
 
             const fmtVal = val ? formatMoney(val) : '';
             grid.innerHTML += `
@@ -1272,7 +1366,6 @@
                 logChange("Gasto", `${n}: ${formatMoney(cleanV)}`);
             }
         } else if(idx>=0) {
-            // SI BORRA EL MONTO:
             if(list[idx].color !== undefined) {
                 if(list[idx].amount !== 0) logChange("Gasto", `${n}: ${formatMoney(oldVal)} -> $0`);
                 list[idx].amount = 0;
@@ -1380,6 +1473,112 @@
         } 
     }
 
+    // --- NUEVAS FUNCIONES PARA LA FICHA DE GASTOS ---
+    function renderExpenseFilterOptions() {
+        const y = document.getElementById('expenseFilterYear').value;
+        const container = document.getElementById('expenseFilterTags');
+        container.innerHTML = '';
+
+        let uniqueNames = new Set();
+        
+        fixedExpenseList.forEach(n => uniqueNames.add(n));
+
+        Object.keys(expenses).forEach(mKey => {
+            if(mKey.startsWith(y)) {
+                expenses[mKey].forEach(e => uniqueNames.add(e.name));
+            }
+        });
+
+        let namesArray = Array.from(uniqueNames).sort();
+
+        namesArray.forEach(name => {
+            const isActive = selectedExpenseFilters.includes(name) ? 'active-red' : '';
+            const safeName = name.replace(/'/g, "\\'");
+            container.innerHTML += `<button class="filter-tag-btn ${isActive}" onclick="toggleExpenseFilter('${safeName}', this)">${name}</button>`;
+        });
+
+        loadExpenseSpecificStats();
+    }
+
+    function toggleExpenseFilter(name, btn) {
+        if(selectedExpenseFilters.includes(name)) {
+            selectedExpenseFilters = selectedExpenseFilters.filter(n => n !== name);
+            btn.classList.remove('active-red');
+        } else {
+            selectedExpenseFilters.push(name);
+            btn.classList.add('active-red');
+        }
+        loadExpenseSpecificStats();
+    }
+
+    function clearExpenseFilters() {
+        selectedExpenseFilters = [];
+        renderExpenseFilterOptions();
+    }
+
+    function loadExpenseSpecificStats() {
+        const y = document.getElementById('expenseFilterYear').value;
+        const div = document.getElementById('expenseFilterResults');
+        div.innerHTML = '';
+
+        if(selectedExpenseFilters.length === 0) {
+            div.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-sec); border: 1px dashed var(--border); border-radius:12px;">Tocá alguna de las etiquetas arriba para armar la tabla.</p>';
+            return;
+        }
+
+        let h = '<div class="card"><div class="table-wrapper"><table style="font-size:12px;"><thead><tr><th>Mes</th>';
+        
+        selectedExpenseFilters.forEach(n => {
+            let shortName = n.length > 10 ? n.substring(0,8) + '.' : n;
+            h += `<th>${shortName}</th>`;
+        });
+        
+        if(selectedExpenseFilters.length > 1) h += '<th style="color:var(--expense-color);">TOTAL MES</th>';
+        h += '</tr></thead><tbody>';
+
+        let colTotals = {};
+        selectedExpenseFilters.forEach(n => colTotals[n] = 0);
+        let grandTotal = 0;
+
+        for(let i=1; i<=12; i++) {
+            const mKey = `${y}-${i.toString().padStart(2, '0')}`;
+            const list = expenses[mKey] || [];
+            
+            let rowHtml = `<tr><td><b>${i.toString().padStart(2,'0')}</b></td>`;
+            let rowSum = 0;
+
+            selectedExpenseFilters.forEach(n => {
+                const e = list.find(x => x.name === n);
+                const val = e ? e.amount : 0;
+                rowSum += val;
+                colTotals[n] += val;
+                
+                rowHtml += `<td>${val > 0 ? formatMoney(val) : '-'}</td>`;
+            });
+
+            grandTotal += rowSum;
+            
+            if(selectedExpenseFilters.length > 1) {
+                rowHtml += `<td style="font-weight:bold; color:var(--expense-color);">${rowSum > 0 ? formatMoney(rowSum) : '-'}</td>`;
+            }
+            rowHtml += `</tr>`;
+            h += rowHtml;
+        }
+
+        h += `<tr><td><b>AÑO</b></td>`;
+        selectedExpenseFilters.forEach(n => {
+            h += `<td style="font-weight:bold;">${formatMoney(colTotals[n])}</td>`;
+        });
+        
+        if(selectedExpenseFilters.length > 1) {
+            h += `<td style="font-weight:900; color:var(--expense-color); font-size:14px;">${formatMoney(grandTotal)}</td>`;
+        }
+        h += `</tr></tbody></table></div></div>`;
+
+        div.innerHTML = h;
+    }
+
+
     // ==========================================
     // SECCIÓN 3: SUELDOS (Calculo Auto + Boton Sumar)
     // ==========================================
@@ -1432,48 +1631,60 @@
                 const added = roundToTwo(cleanAdd);
                 const newVal = roundToTwo(currentVal + added);
                 saveSal(mKey, field, newVal);
-                loadSalaryView(); // Refrescar vista
+                loadSalaryView(); 
             }
         }
     }
 
     // ==========================================
-    // SECCIÓN 4: INGRESOS (ARCA MEJORADO)
+    // SECCIÓN 4: INGRESOS 
     // ==========================================
     function loadTaxView() {
         const y = document.getElementById('taxYear').value, tbody = document.getElementById('taxTableBody'); tbody.innerHTML = '';
         let sy1=0, sy2=0, sm1=0, sm2=0;
         for(let i=1; i<=12; i++) {
             const mKey = `${y}-${i.toString().padStart(2, '0')}`;
-            const d = salaries[mKey] || { sueldo:0, pres:0, afip_yani:'', afip_mauro:'' };
             const yVal = getBilledTotal(mKey, ['fac_yani']);
             const mVal = getBilledTotal(mKey, ['fac_mauro', 'fac_quassar']);
             if(i<=6) { sy1+=yVal; sm1+=mVal; } else { sy2+=yVal; sm2+=mVal; }
-            tbody.innerHTML += `<tr><td><b>${i}</b></td><td>${formatMoney(yVal)}</td><td>${formatMoney(mVal)}</td><td style="color:#2563eb"><b>${formatMoney(yVal+mVal)}</b></td><td><input type="text" class="arca-input" value="${d.afip_yani||''}" onchange="saveAfip('${mKey}','afip_yani',this.value)"></td><td><input type="text" class="arca-input" value="${d.afip_mauro||''}" onchange="saveAfip('${mKey}','afip_mauro',this.value)"></td></tr>`;
+            
+            // MODIFICADO: Se centran los datos y se quitan los inputs de ARCA
+            tbody.innerHTML += `<tr>
+                <td style="text-align: center;"><b>${i}</b></td>
+                <td style="text-align: center;">${formatMoney(yVal)}</td>
+                <td style="text-align: center;">${formatMoney(mVal)}</td>
+                <td style="color:#2563eb; text-align: center;"><b>${formatMoney(yVal+mVal)}</b></td>
+            </tr>`;
         }
         document.getElementById('sumY1').innerText = formatMoney(sy1); document.getElementById('sumY2').innerText = formatMoney(sy2); document.getElementById('sumYT').innerText = formatMoney(sy1+sy2);
         document.getElementById('sumM1').innerText = formatMoney(sm1); document.getElementById('sumM2').innerText = formatMoney(sm2); document.getElementById('sumMT').innerText = formatMoney(sm1+sm2);
         document.getElementById('sumG1').innerText = formatMoney(sy1+sm1); document.getElementById('sumG2').innerText = formatMoney(sy2+sm2); document.getElementById('sumGT').innerText = formatMoney(sy1+sm1+sy2+sm2);
     }
-    function saveAfip(m, f, v) { 
-        if(!salaries[m]) salaries[m]={sueldo:0,pres:0}; 
-        salaries[m][f]=v; 
-        saveAll(); 
-    }
 
     function exportData() { const b = new Blob([JSON.stringify({companies,expenses,salaries,changeLogs})], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'backup.json'; a.click(); }
     
     function importData() { 
-        const f = document.getElementById('importFile').files[0]; 
+        const fileInput = document.getElementById('importFile');
+        if(!fileInput.files || fileInput.files.length === 0) {
+            alert("Por favor, primero elegí un archivo JSON de tu celular/computadora."); 
+            return;
+        }
+        
+        const f = fileInput.files[0]; 
         const r = new FileReader(); 
         r.onload = (e) => { 
-            const d = JSON.parse(e.target.result); 
-            companies=d.companies || {}; 
-            expenses=d.expenses || {}; 
-            salaries=d.salaries || {}; 
-            changeLogs=d.changeLogs||[]; 
-            saveAll(); 
-            alert("Datos restaurados a la nube con éxito.");
+            try {
+                const d = JSON.parse(e.target.result); 
+                companies = d.companies || {}; 
+                expenses = d.expenses || {}; 
+                salaries = d.salaries || {}; 
+                changeLogs = d.changeLogs || []; 
+                saveAll(); 
+                alert("¡Excelente! Datos restaurados a la nube con éxito. La página se va a recargar.");
+                setTimeout(() => { window.location.reload(); }, 1500);
+            } catch(err) {
+                alert("Error al leer el archivo. Asegurate de que sea un archivo de backup .json válido.");
+            }
         }; 
         r.readAsText(f); 
     }
@@ -1498,6 +1709,7 @@
     document.getElementById('billingMonthSelector').value = currentMonth;
     document.getElementById('collectedMonthSelector').value = currentMonth;
     document.getElementById('expenseMonth').value = currentMonth;
+    document.getElementById('expenseFilterYear').value = currentYear;
     document.getElementById('salaryYear').value = currentYear;
     document.getElementById('taxYear').value = currentYear;
     document.getElementById('filterYear').value = currentYear;
