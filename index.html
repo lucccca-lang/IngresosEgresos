@@ -151,6 +151,9 @@
         
         .expense-item-div { padding: 8px; border-radius: 8px; transition: 0.3s; position: relative; border: 1px solid var(--border); }
         
+        /* GASTOS INACTIVOS (> 3 MESES) */
+        .expense-item-div.inactive-exp { opacity: 0.4; border-style: dashed; background: transparent !important; }
+
         /* BOTONES GASTO (SUMAR Y COLOR) */
         .expense-tools { display: flex; gap: 5px; }
         .btn-tool {
@@ -259,7 +262,6 @@
         /* MAGIA RESPONSIVE */
         @media (max-width: 600px) {
             .summary-grid { grid-template-columns: 1fr !important; }
-            .arca-input { min-width: 70px !important; font-size: 14px !important; padding: 8px !important; }
             .date-grid-responsive { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
             #dateBill, #datePay { padding: 6px !important; font-size: 13px !important; }
             .summary-row span { font-size: 13px; }
@@ -640,7 +642,7 @@
     let selectedExpenseFilters = [];
 
     // LISTA ACTUALIZADA DE GASTOS FIJOS
-    const fixedExpenseList = ["AMEX", "TARJ FRANCES", "FRANCES MASTER", "TARJ GALICIA", "TARJ ICBC", "TARJ HIPOTECARIO", "TARJ BANCO NACION", "SERV-LUZ", "GAS", "EXPENSAS", "NAFTA", "SUPERMERCADO", "MUNICIPAL", "ARBA CASA", "PATENTE C3", "PATENTE C4", "IIGG YANINA", "IIGG MAURO", "MONOTRIBUTO", "COLEGIO LUCCA", "COLEGIO EMMA", "HONORARIOS", "TELEFONOS", "EXTRAS"];
+    const fixedExpenseList = ["AMEX", "TARJ FRANCES", "FRANCES MASTER", "TARJ GALICIA", "TARJ ICBC", "TARJ HIPOTECARIO", "TARJ BANCO NACION", "SERV-LUZ", "GAS", "EXPENSAS", "NAFTA", "SUPERMERCADO", "MUNICIPAL", "ARBA CASA", "PATENTE C3", "PATENTE C4", "IIGG YANINA", "IIGG MAURO", "MONOTRIBUTO", "COLEGIO LUCCA", "COLEGIO EMMA", "FACULTAD", "HONORARIOS", "TELEFONOS", "EXTRAS"];
     
     const expenseColors = ['rgba(255,255,255,0.8)', '#fef9c3', '#dcfce7', '#fee2e2']; 
 
@@ -1300,7 +1302,7 @@
     }
 
     // ==========================================
-    // SECCIÓN 2: GASTOS (LOGICA COLOR AUTO/MANUAL Y FICHA)
+    // SECCIÓN 2: GASTOS (LÓGICA COLOR AUTO/MANUAL Y FICHA)
     // ==========================================
     
     function switchExpenseTab(tab) {
@@ -1320,18 +1322,62 @@
         }
     }
 
+    // Función para sacar meses previos (ej: si le paso "2024-05", me da "2024-04", "2024-03", etc.)
+    function getPreviousMonths(m, count) {
+        let res = [];
+        if(!m) return res;
+        let [y, mo] = m.split('-').map(Number);
+        for(let i=0; i<count; i++) {
+            mo--;
+            if(mo === 0) { mo = 12; y--; }
+            res.push(`${y}-${mo.toString().padStart(2, '0')}`);
+        }
+        return res;
+    }
+
     function loadExpensesView() {
-        const m = document.getElementById('expenseMonth').value, grid = document.getElementById('fixedExpensesGrid'); if(!expenses[m]) expenses[m] = []; grid.innerHTML = '';
+        const m = document.getElementById('expenseMonth').value;
+        const grid = document.getElementById('fixedExpensesGrid'); 
+        if(!expenses[m]) expenses[m] = []; 
+        grid.innerHTML = '';
+
+        // OBTENEMOS LOS 3 MESES ANTERIORES PARA LA INTELIGENCIA DE INACTIVIDAD
+        const prev3 = getPreviousMonths(m, 3);
+        let activeExps = [];
+        let inactiveExps = [];
+
         fixedExpenseList.forEach(name => {
-            const e = expenses[m].find(x => x.name === name), val = e ? e.amount : '', userColor = (e && e.color) ? e.color : null;
+            const e = expenses[m].find(x => x.name === name);
+            const amtCurrent = e ? e.amount : 0;
+            const userColor = e ? e.color : null;
+
+            let amt1 = (expenses[prev3[0]] && expenses[prev3[0]].find(x => x.name === name))?.amount || 0;
+            let amt2 = (expenses[prev3[1]] && expenses[prev3[1]].find(x => x.name === name))?.amount || 0;
+            let amt3 = (expenses[prev3[2]] && expenses[prev3[2]].find(x => x.name === name))?.amount || 0;
+
+            // Es INACTIVO si en los 3 meses previos y en el actual está vacío (=0), y no lo pinto manualmente
+            if (amtCurrent === 0 && amt1 === 0 && amt2 === 0 && amt3 === 0 && (userColor === null || userColor === undefined)) {
+                inactiveExps.push(name);
+            } else {
+                activeExps.push(name);
+            }
+        });
+
+        // FUNCION PARA RENDERIZAR CADA CAJITA DE GASTO
+        const renderExp = (name, isInactive) => {
+            const e = expenses[m].find(x => x.name === name);
+            const val = e ? e.amount : '';
+            const userColor = e ? e.color : null;
             
             let bg;
             if (userColor !== null && userColor !== undefined) bg = expenseColors[userColor];
             else bg = (val > 0) ? expenseColors[2] : expenseColors[3];
 
             const fmtVal = val ? formatMoney(val) : '';
+            const inactiveClass = isInactive ? ' inactive-exp' : '';
+
             grid.innerHTML += `
-                <div class="expense-item-div" style="background:${bg}">
+                <div class="expense-item-div${inactiveClass}" style="background:${bg}" id="div_exp_${name.replace(/\s/g,'')}">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
                         <label style="font-size:10px; font-weight:700; color:#475569;">${name}</label>
                         <div class="expense-tools">
@@ -1341,7 +1387,12 @@
                     </div>
                     <input type="text" inputmode="decimal" class="fix-expense-input" id="fix_${name.replace(/\s/g,'')}" placeholder="0" value="${fmtVal}" onfocus="cleanInput(this)" onblur="fmtInput(this); autoSaveFixed('${name}')">
                 </div>`;
-        });
+        };
+
+        // DIBUJAMOS PRIMERO LOS ACTIVOS Y LUEGO LOS INACTIVOS (ABAJO DEL TODO)
+        activeExps.forEach(n => renderExp(n, false));
+        inactiveExps.forEach(n => renderExp(n, true));
+
         updateExpenseTotalDisplay();
     }
     
@@ -1365,6 +1416,25 @@
                 list.push({id:Date.now(), name:n, amount:cleanV});
                 logChange("Gasto", `${n}: ${formatMoney(cleanV)}`);
             }
+            
+            // ACTUALIZACION VISUAL INSTANTANEA
+            let div = document.getElementById("div_exp_" + n.replace(/\s/g,''));
+            if(div) {
+                // Si estaba inactivo, lo activamos y lo movemos hacia arriba suavemente
+                if(div.classList.contains('inactive-exp')) {
+                    div.classList.remove('inactive-exp');
+                    let grid = document.getElementById('fixedExpensesGrid');
+                    let firstInactive = grid.querySelector('.inactive-exp');
+                    if(firstInactive) grid.insertBefore(div, firstInactive);
+                }
+                
+                // Si no tiene color manual, lo ponemos verde
+                let e = expenses[m].find(x => x.name === n);
+                if(e && (e.color === null || e.color === undefined)) {
+                    div.style.background = expenseColors[2]; 
+                }
+            }
+
         } else if(idx>=0) {
             if(list[idx].color !== undefined) {
                 if(list[idx].amount !== 0) logChange("Gasto", `${n}: ${formatMoney(oldVal)} -> $0`);
@@ -1373,7 +1443,16 @@
                 if(list[idx].amount !== 0) logChange("Gasto", `${n}: ${formatMoney(oldVal)} -> Borrado`);
                 list.splice(idx,1); 
             }
+            
+            // Visualmente lo dejamos rojo si quedó vacío (y si no tiene color manual)
+            let div = document.getElementById("div_exp_" + n.replace(/\s/g,''));
+            let e = expenses[m].find(x => x.name === n);
+            if(div && (!e || (e.color === null || e.color === undefined))) {
+                div.style.background = expenseColors[3]; 
+            }
         }
+        
+        updateExpenseTotalDisplay();
         saveAll(); 
     }
 
@@ -1393,6 +1472,7 @@
                 
                 logChange("Gasto Suma", `${n}: Sumado ${formatMoney(added)}`);
                 saveAll(); 
+                loadExpensesView(); // Refrescar vista
             }
         }
     }
@@ -1420,6 +1500,7 @@
         }
         
         saveAll(); 
+        loadExpensesView(); // Refrescar vista instantáneamente
     }
 
     function updateExpenseTotalDisplay() {
@@ -1462,6 +1543,7 @@
         document.getElementById('extraName').value=''; 
         document.getElementById('extraAmount').value=''; 
         saveAll(); 
+        loadExpensesView(); 
     }
     
     function delExpense(m, id) { 
@@ -1470,6 +1552,7 @@
             if(e) logChange("Extra", `Borrado: ${e.name}`);
             expenses[m] = expenses[m].filter(e=>e.id!==id); 
             saveAll(); 
+            loadExpensesView(); 
         } 
     }
 
@@ -1648,7 +1731,6 @@
             const mVal = getBilledTotal(mKey, ['fac_mauro', 'fac_quassar']);
             if(i<=6) { sy1+=yVal; sm1+=mVal; } else { sy2+=yVal; sm2+=mVal; }
             
-            // MODIFICADO: Se centran los datos y se quitan los inputs de ARCA
             tbody.innerHTML += `<tr>
                 <td style="text-align: center;"><b>${i}</b></td>
                 <td style="text-align: center;">${formatMoney(yVal)}</td>
